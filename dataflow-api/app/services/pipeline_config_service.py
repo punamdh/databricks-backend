@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import json
 
+from fastapi import HTTPException
 from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.models.orm import BTSConfig, PiiAttribute, SchemaVersion, SourceTable, Watermark
@@ -124,9 +126,16 @@ class PipelineConfigService:
             try:
                 self.create(payload)
                 created += 1
-            except Exception as exc:  # noqa: BLE001
+            except (HTTPException, SQLAlchemyError, ValueError, TypeError) as exc:
                 failed += 1
-                errors.append({"index": idx, "error": str(exc)})
+                if isinstance(exc, HTTPException):
+                    detail = exc.detail if isinstance(exc.detail, dict) else {"message": str(exc.detail)}
+                    error_code = detail.get("error_code", "DB_ERROR")
+                    message = detail.get("message", "Failed to create pipeline config")
+                else:
+                    error_code = "DB_ERROR"
+                    message = "Failed to create pipeline config"
+                errors.append({"index": idx, "error_code": error_code, "message": message})
         return {"created_count": created, "failed_count": failed, "errors": errors}
 
     def get_watermark(self, table_config_id: int):

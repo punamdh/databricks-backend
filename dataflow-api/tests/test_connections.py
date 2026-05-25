@@ -6,7 +6,7 @@ def _payload(name="conn_a"):
         "is_target": 0,
         "env_type": "dev",
         "auth_type": "none",
-        "details": {"db_file_path": "/tmp/workspace/punamdh/databricks-backend/dataflow-api/test.db"},
+        "details": {"db_file_path": "test.db"},
         "auth": {},
         "created_by": "tester",
         "updated_by": "tester",
