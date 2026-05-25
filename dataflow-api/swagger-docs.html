@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataFlow API - Swagger Documentation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+        }
+        .topbar {
+            background-color: #1e1e1e;
+            padding: 10px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .topbar h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .topbar-section {
+            display: flex;
+            gap: 20px;
+        }
+        .info-badge {
+            background-color: #ffc107;
+            color: #333;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .api-version {
+            background-color: #28a745;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h1>🚀 DataFlow API</h1>
+        <div class="topbar-section">
+            <span class="info-badge">Production Ready</span>
+            <span class="api-version">v1.0.0</span>
+        </div>
+    </div>
+    <div id="swagger-ui"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-bundle.min.js"></script>
+    <script>
+        const spec = {
+            "openapi": "3.0.0",
+            "info": {
+                "title": "DataFlow API",
+                "description": "REST API for DataFlow Pipeline Configuration Platform - Metadata Store V2. Manages data source connections, pipeline configurations, transformations, schema versioning, PII classification, and audit logging.",
+                "version": "1.0.0",
+                "contact": {
+                    "name": "DataFlow Team",
+                    "email": "support@dataflow.dev"
+                },
+                "license": {
+                    "name": "MIT"
+                }
+            },
+            "servers": [
+                {
+                    "url": "http://localhost:8000",
+                    "description": "Local Development Server"
+                },
+                {
+                    "url": "https://api.dataflow.dev",
+                    "description": "Production Server"
+                }
+            ],
+            "tags": [
+                {
+                    "name": "Connectors",
+                    "description": "Connector metadata and field schemas"
+                },
+                {
+                    "name": "Connections",
+                    "description": "Data source connection management (CRUD)"
+                },
+                {
+                    "name": "Pipeline Configs",
+                    "description": "Source-to-Bronze pipeline configuration (CRUD, watermark, PII, schema)"
+                },
+                {
+                    "name": "BTS Configs",
+                    "description": "Bronze-to-Silver transformation configuration (CRUD)"
+                },
+                {
+                    "name": "Audit",
+                    "description": "Pipeline execution audit logs and run tracking"
+                }
+            ],
+            "paths": {
+                "/health": {
+                    "get": {
+                        "summary": "Health Check",
+                        "description": "Verify API is running and database is connected",
+                        "tags": ["Health"],
+                        "responses": {
+                            "200": {
+                                "description": "API is healthy",
+                                "content": {
+                                    "application/json": {
+                                        "schema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "status": {"type": "string", "example": "success"},
+                                                "data": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "healthy": {"type": "boolean", "example": true}
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "/api/v1/connectors": {
+                    "get": {
+                        "summary": "List all supported connectors",
+                        "description": "Returns list of 12 supported connector types with their auth methods",
+                        "tags": ["Connectors"],
+                        "responses": {
+                            "200": {
+                                "description": "List of connectors",
+                                "content": {
+                                    "application/json": {
+                                        "schema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "status": {"type": "string", "example": "success"},
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "connector_key": {"type": "string", "example": "mssql"},
+                                                            "connector_label": {"type": "string", "example": "MSSQL"},
+                                                            "auth_types": {"type": "array", "items": {"type": "string"}},
+                                                            "icon": {"type": "string"}
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "/api/v1/connectors/{connector_key}/fields": {
+                    "get": {
+                        "summary": "Get connector field schema",
+                        "description": "Returns base fields and auth fields for a connector + auth combo",
+                        "tags": ["Connectors"],
+                        "parameters": [
+                            {
+                                "name": "connector_key",
+                                "in": "path",
+                                "required": true,
+                                "schema": {"type": "string"},
+                                "description": "Connector type (mssql, postgres, mysql, oracle, snowflake, bigquery, redshift, sqlite, s3, gcs, azure-blob, sftp, local)"
+                            },
+                            {
+                                "name": "auth_type",
+                                "in": "query",
+                                "required": false,
+                                "schema": {"type": "string"},
+                                "description": "Auth method (basic, kerberos, oauth, iam, key, none)"
+                            }
+                        ],
+                        "responses": {
+                            "200": {
+                                "description": "Connector fields schema"
+                            }
+                        }
+                    }
+                },
+                "/api/v1/connections": {
+                    "post": {
+                        "summary": "Create connection",
+                        "description": "Create a new data source connection with atomic transaction",
+                        "tags": ["Connections"],
+                        "requestBody": {
+                            "required": true,
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "required": ["connection_name", "connection_type", "connection_domain_name", "env_type"],
+                                        "properties": {
+                                            "connection_name": {"type": "string", "example": "Production MSSQL"},
+                                            "connection_type": {"type": "string", "example": "mssql"},
+                                            "connection_domain_name": {"type": "string", "example": "HR"},
+                                            "is_target": {"type": "integer", "example": 0},
+                                            "env_type": {"type": "string", "enum": ["dev", "qa", "prod"], "example": "prod"},
+                                            "auth_type": {"type": "string", "example": "basic"},
+                                            "details": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "host": {"type": "string"},
+                                                    "port": {"type": "string"},
+                                                    "database": {"type": "string"}
+                                                }
+                                            },
+                                            "auth": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "username": {"type": "string"},
+                                                    "password": {"type": "string"}
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "responses": {
+                            "201": {
+                                "description": "Connection created successfully"
+                            },
+                            "400": {
+                                "description": "Invalid connector or auth type"
+                            },
+                            "409": {
+                                "description": "Connection name already exists for environment"
+                            }
+                        }
+                    },
+                    "get": {
+                        "summary": "List connections",
+                        "description": "List all connections with pagination and filtering",
+                        "tags": ["Connections"],
+                        "parameters": [
+                            {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
+                            {"name": "page_size", "in": "query", "schema": {"type": "integer", "default": 20}},
+                            {"name": "env_type", "in": "query", "schema": {"type": "string"}},
+                            {"name": "connection_type", "in": "query", "schema": {"type": "string"}},
+                            {"name": "is_target", "in": "query", "schema": {"type": "integer"}},
+                            {"name": "is_active", "in": "query", "schema": {"type": "integer", "default": 1}},
+                            {"name": "search", "in": "query", "schema": {"type": "string"}}
+                        ],
+                        "responses": {
+                            "200": {
+                                "description": "Paginated list of connections"
+                            }
+                        }
+                    }
+                },
+                "/api/v1/connections/{id}": {
+                    "get": {
+                        "summary": "Get connection detail",
+                        "description": "Retrieve full connection details with nested properties",
+                        "tags": ["Connections"],
+                        "parameters": [
+                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
+                        ],
+                        "responses": {
+                            "200": {
+                                "description": "Connection details"
+                            },
+                            "404": {
+                                "description": "Connection not found"
+                            }
+                        }
+                    },
+                    "put": {
+                        "summary": "Update connection",
+                        "description": "Update connection properties (replace details and auth)",
+                        "tags": ["Connections"],
+                        "parameters": [
+                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
+                        ],
+                        "requestBody": {
+                            "required": true,
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        },
+                        "responses": {
+                            "200": {
+                                "description": "Connection updated"
+                            },
+                            "404": {
+                                "description": "Connection not found"
+                            }
+                        }
+                    },
+                    "delete": {
+                        "summary": "Soft-delete connection",
+                        "description": "Deactivate connection (sets is_active=0)",
+                        "tags": ["Connections"],
+                        "parameters": [
+                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}},
+                            {"name": "updated_by", "in": "query", "schema": {"type": "string", "default": "system"}}
+                        ],
+                        "responses": {
+                            "200": {
+                                "description": "Connection deactivated"
+                            },
+                            "404": {
+                                "description": "Connection not found"
+                            }
+                        }
+                    }
+                },
+                "/api/v1/connections/{id}/test": {
+                    "post": {
+                        "summary": "Test connection",
+                        "description": "Test connectivity to the data source",
+                        "tags": ["Connections"],
+                        "parameters": [
+                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
+                        ],
+                        "responses": {
+                            "200": {
+                                "description": "Connectivity test result"
+                            }
+                        }
+                    }
+                },
+                "/api/v1/pipeline-configs": {
+                    "post": {
+                        "summary": "Create pipeline config",
+                        "description": "Create source-to-bronze pipeline configuration",
+                        "tags": ["Pipeline Configs"],
+                        "requestBody": {
+                            "required": true,
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "required": ["connection_source_id", "connection_domain_name", "config_group", "source_attributes", "target_attributes", "load_type", "env_type"],
+                                        "properties": {
+                                            "connection_source_id": {"type": "integer"},
+                                            "connection_domain_name": {"type": "string"},
+                                            "config_group": {"type": "string"},
+                                            "source_attributes": {"type": "object"},
+                                            "target_attributes": {"type": "object"},
+                                            "load_type": {"type": "string", "enum": ["full", "incremental", "cdc", "api", "file_autoloader"]},
+                                            "natural_key_columns": {"type": "string"},
+                                            "watermark_enabled": {"type": "integer"},
+                                            "pii_scan_enabled": {"type": "integer"},
+                                            "fail_mode": {"type": "string", "enum": ["halt", "skip", "quarantine"]},
+                                            "env_type": {"type": "string", "enum": ["dev", "qa", "prod"]}
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "responses": {
+                            "201": {
+                                "description": "Pipeline config created"
+                            }
+                        }
+                    },
+                    "get": {
+                        "summary": "List pipeline configs",
+                        "description": "List all pipeline configurations with pagination",
+                        "tags": ["Pipeline Configs"],
+                        "parameters": [
+                            {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
+                            {"name": "page_size", "in": "query", "schema": {"type": "integer", "default": 20}},
+                            {"name": "env_type", "in": "query", "schema": {"type": "string"}},
+                            {"name": "connection_source_id", "in": "query", "schema": {"type": "integer"}},
+                            {"name": "config_group", "in": "query", "schema": {"type": "string"}},
+                            {"name": "load_type", "in": "query", "schema": {"type": "string"}}
+                        ],
+                        "responses": {
+                            "200": {
+                                "description": "List of pipeline configs"
+                            }
+                        }
+                    }
+                },
+                "/api/v1/pipeline-configs/{id}": {
+                    "get": {
+                        "summary": "Get pipeline config",
+                        "description": "Retrieve full pipeline configuration details",
+                        "tags": ["Pipeline Configs"],
+                        "parameters": [
+                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
+                        ],
+                        "responses": {
+                            "200": {
+                                "description": "Pipeline config details"
+                            }
+                        }
+                    },
+                    "put": {
+                        "summary": "Update pipeline config",
+                        "description": "Update pipeline configuration",
+                        "tags": ["Pipeline Configs"],
+                        "parameters": [
+                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
+                        ],
+                        "requestBody": {
+                            "required": true,
+                            "content": {"application/json": {"schema": {"type": "object"}}}
+                        },
+                        "responses": {
+                            "200": {
+                                "description": "Pipeline config updated"
+                            }
+                        }
+                    },
+                    "delete": {
+                        "summary": "Delete pipeline config",
+                        "description": "Soft-delete pipeline configuration",
+                        "tags": ["Pipeline Configs"],
+                        "parameters": [
+                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
+                        ],
+                        "responses": {
+                            "200": {
+                                "description": "Pipeline config deleted"
+                            }
+                        }
+                    }
+                },
+                "/api/v1/pipeline-configs/bulk": {
+                    "post": {
+                        "summary": "Bulk create pipeline configs",
+                        "description": "Create multiple pipeline configurations in batch",
+                        "tags": ["Pipeline Configs"],
+                        "requestBody": {
+                            "required": true,
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "array",
+                                        "items": {"type": "object"}
+                                    }
+                                }
+                            }
+                        },
+                        "responses": {
+                            "200": {
+                                "description": "Batch creation result"
+                            }
+                        }
+                    }
+                },
+                "/api/v1/pipeline-configs/{id}/watermark": {
+                    "get": {
+                        "summary": "Get watermark",
+                        "description": "Retrieve watermark for incremental load tracking",
+                        "tags": ["Pipeline Configs"],
+                        "parameters": [
+                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
+                        ],
+                        "responses": {
+                            "200": {
+                                "description": "Watermark details"
+                            }
+                        }
+                    },
+                    "put": {
+                        "summary": "Upsert watermark",
+                        "description": "Create or update watermark for incremental load",
+                        "tags": ["Pipeline Configs"],
+                        "parameters": [
+                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
+                        ],
+                        "requestBody": {
+                            "required": true,
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "watermark_column": {"type": "string"},
+                                            "watermark_type": {"type": "string", "enum": ["timestamp", "integer", "hashkey"]},
+                                            "last_value": {"type": "string"},
+                                            "last_run_id": {"type": "string"}
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "responses": {
+                            "200": {
+                                "description": "Watermark upserted"
+                            }
+                        }
+                    }
+                },
+                "/api/v1/pipeline-configs/{id}/pii": {
+                    "get": {
+                        "summary": "Get PII attributes",
+                        "description": "Retrieve PII classification for columns",
+                        "tags": ["Pipeline Configs"],
+                        "parameters": [
+                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
+                        ],
+                        "responses": {
+                            "200": {
+                                "description": "PII attributes list"
+                            }
+                        }
+                    },
+                    "post": {
+                        "summary": "Set PII attributes",
+                        "description": "Add or replace PII classifications for columns",
+                        "tags": ["Pipeline Configs"],
+                        "parameters": [
+                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}},
+                            {"name": "env_type", "in": "query", "schema": {"type": "string", "default": "dev"}},
+                            {"name": "created_by", "in": "query", "schema": {"type": "string", "default": "system"}}
+                        ],
+                        "requestBody": {
+                            "required": true,
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "column_name": {"type": "string"},
+                                                "pii_category": {"type": "string", "enum": ["email", "phone", "full_name", "national_id", "financial", "health"]},
+                                                "protection_method": {"type": "string", "enum": ["ENCRYPT", "MASK", "PSEUDONYMIZE", "REDACT"]},
+                                                "sensitivity": {"type": "string", "enum": ["PII", "PCI", "PHI", "CONFIDENTIAL", "PUBLIC"]},
+                                                "masking_policy": {"type": "string"},
+                                                "access_tier": {"type": "string"}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "responses": {
+                            "200": {
+                                "description": "PII attributes set"
+                            }
+                        }
+                    }
+                },
+                "/api/v1/pipeline-configs/{id}/schema-versions": {
+                    "get": {
+                        "summary": "List schema versions",
+                        "description": "Retrieve append-only log of schema changes",
+                        "tags": ["Pipeline Configs"],
+                        "parameters": [
+                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
+                        ],
+                        "responses": {
+                            "200": {
+                                "description": "Schema version history"
+                            }
+                        }
+                    },
+                    "post": {
+                        "summary": "Add schema version",
+                        "description": "Record a new schema version change",
+                        "tags": ["Pipeline Configs"],
+                        "parameters": [
+                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
+                        ],
+                        "requestBody": {
+                            "required": true,
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "version_number": {"type": "integer"},
+                                            "column_count": {"type": "integer"},
+                                            "column_changes_json": {"type": "object"},
+                                            "change_type": {"type": "string", "enum": ["additive", "deletion"]},
+                                            "detected_by_run_id": {"type": "string"}
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "responses": {
+                            "200": {
+                                "description": "Schema version added"
+                            }
+                        }
+                    }
+                },
+                "/api/v1/bts-configs": {
+                    "post": {
+                        "summary": "Create BTS config",
+                        "description": "Create bronze-to-silver transformation configuration",
+                        "tags": ["BTS Configs"],
+                        "requestBody": {
+                            "required": true,
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "required": ["dataset_name", "env_type"],
+                                        "properties": {
+                                            "dataset_name": {"type": "string"},
+                                            "source_config_id": {"type": "integer"},
+                                            "silver_layout": {"type": "array"},
+                                            "dq_rules": {"type": "array"},
+                                            "std_rules": {"type": "array"},
+                                            "transformation_yaml": {"type": "string"},
+                                            "tags": {"type": "array"},
+                                            "env_type": {"type": "string"}
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "responses": {
+                            "201": {
+                                "description": "BTS config created"
+                            }
+                        }
+                    },
+                    "get": {
+                        "summary": "List BTS configs",
+                        "description": "List all bronze-to-silver configurations",
+                        "tags": ["BTS Configs"],
+                        "parameters": [
+                            {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
+                            {"name": "page_size", "in": "query", "schema": {"type": "integer", "default": 20}},
+                            {"name": "env_type", "in": "query", "schema": {"type": "string"}}
+                        ],
+                        "responses": {
+                            "200": {
+                                "description": "List of BTS configs"
+                            }
+                        }
+                    }
+                },
+                "/api/v1/bts-configs/{id}": {
+                    "get": {
+                        "summary": "Get BTS config",
+                        "description": "Retrieve BTS configuration details",
+                        "tags": ["BTS Configs"],
+                        "parameters": [
+                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
+                        ],
+                        "responses": {
+                            "200": {
+                                "description": "BTS config details"
+                            }
+                        }
+                    },
+                    "put": {
+                        "summary": "Update BTS config",
+                        "description": "Update BTS configuration",
+                        "tags": ["BTS Configs"],
+                        "parameters": [
+                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
+                        ],
+                        "requestBody": {
+                            "required": true,
+                            "content": {"application/json": {"schema": {"type": "object"}}}
+                        },
+                        "responses": {
+                            "200": {
+                                "description": "BTS config updated"
+                            }
+                        }
+                    },
+                    "delete": {
+                        "summary": "Delete BTS config",
+                        "description": "Soft-delete BTS configuration",
+                        "tags": ["BTS Configs"],
+                        "parameters": [
+                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
+                        ],
+                        "responses": {
+                            "200": {
+                                "description": "BTS config deleted"
+                            }
+                        }
+                    }
+                },
+                "/api/v1/audit/runs": {
+                    "post": {
+                        "summary": "Create audit run",
+                        "description": "Create a new pipeline execution audit record",
+                        "tags": ["Audit"],
+                        "requestBody": {
+                            "required": true,
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "required": ["run_id", "table_config_id", "connection_source_id", "start_time", "status", "env_type"],
+                                        "properties": {
+                                            "run_id": {"type": "string"},
+                                            "table_config_id": {"type": "integer"},
+                                            "connection_source_id": {"type": "integer"},
+                                            "source_attributes": {"type": "object"},
+                                            "target_attributes": {"type": "object"},
+                                            "batch_id": {"type": "string"},
+                                            "load_type": {"type": "string"},
+                                            "start_time": {"type": "string", "format": "date-time"},
+                                            "status": {"type": "string", "enum": ["running", "succeeded", "failed"]},
+                                            "env_type": {"type": "string"}
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "responses": {
+                            "201": {
+                                "description": "Audit run created"
+                            }
+                        }
+                    },
+                    "get": {
+                        "summary": "List audit runs",
+                        "description": "List pipeline execution audit records with pagination",
+                        "tags": ["Audit"],
+                        "parameters": [
+                            {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
+                            {"name": "page_size", "in": "query", "schema": {"type": "integer", "default": 20}},
+                            {"name": "run_id", "in": "query", "schema": {"type": "string"}},
+                            {"name": "table_config_id", "in": "query", "schema": {"type": "integer"}},
+                            {"name": "status", "in": "query", "schema": {"type": "string"}}
+                        ],
+                        "responses": {
+                            "200": {
+                                "description": "List of audit runs"
+                            }
+                        }
+                    }
+                },
+                "/api/v1/audit/runs/{id}": {
+                    "get": {
+                        "summary": "Get audit run",
+                        "description": "Retrieve details of a specific pipeline execution",
+                        "tags": ["Audit"],
+                        "parameters": [
+                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
+                        ],
+                        "responses": {
+                            "200": {
+                                "description": "Audit run details"
+                            }
+                        }
+                    },
+                    "patch": {
+                        "summary": "Update audit run",
+                        "description": "Update audit run on completion (end_time, status, metrics)",
+                        "tags": ["Audit"],
+                        "parameters": [
+                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
+                        ],
+                        "requestBody": {
+                            "required": true,
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "end_time": {"type": "string", "format": "date-time"},
+                                            "elapsed_seconds": {"type": "integer"},
+                                            "rows_read": {"type": "integer"},
+                                            "rows_written": {"type": "integer"},
+                                            "watermark_end": {"type": "string"},
+                                            "status": {"type": "string"},
+                                            "error_message": {"type": "string"},
+                                            "error_type": {"type": "string"}
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "responses": {
+                            "200": {
+                                "description": "Audit run updated"
+                            }
+                        }
+                    }
+                }
+            },
+            "components": {
+                "schemas": {
+                    "Connection": {
+                        "type": "object",
+                        "properties": {
+                            "connection_id": {"type": "integer"},
+                            "connection_name": {"type": "string"},
+                            "connection_type": {"type": "string"},
+                            "connection_domain_name": {"type": "string"},
+                            "is_target": {"type": "integer"},
+                            "env_type": {"type": "string"},
+                            "is_active": {"type": "integer"},
+                            "created_by": {"type": "string"},
+                            "created_at": {"type": "string", "format": "date-time"},
+                            "updated_by": {"type": "string"},
+                            "updated_at": {"type": "string", "format": "date-time"}
+                        }
+                    },
+                    "PipelineConfig": {
+                        "type": "object",
+                        "properties": {
+                            "table_config_id": {"type": "integer"},
+                            "connection_source_id": {"type": "integer"},
+                            "config_group": {"type": "string"},
+                            "source_attributes": {"type": "object"},
+                            "target_attributes": {"type": "object"},
+                            "load_type": {"type": "string"},
+                            "watermark_enabled": {"type": "integer"},
+                            "pii_scan_enabled": {"type": "integer"},
+                            "env_type": {"type": "string"}
+                        }
+                    },
+                    "AuditRun": {
+                        "type": "object",
+                        "properties": {
+                            "table_run_id": {"type": "integer"},
+                            "run_id": {"type": "string"},
+                            "table_config_id": {"type": "integer"},
+                            "start_time": {"type": "string", "format": "date-time"},
+                            "end_time": {"type": "string", "format": "date-time"},
+                            "status": {"type": "string"},
+                            "rows_read": {"type": "integer"},
+                            "rows_written": {"type": "integer"}
+                        }
+                    },
+                    "Error": {
+                        "type": "object",
+                        "properties": {
+                            "status": {"type": "string", "example": "error"},
+                            "error_code": {"type": "string"},
+                            "message": {"type": "string"},
+                            "details": {"type": "object"}
+                        }
+                    }
+                }
+            }
+        };
+
+        window.onload = function() {
+            window.ui = SwaggerUIBundle({
+                spec: spec,
+                dom_id: '#swagger-ui',
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIBundle.SwaggerUIStandalonePreset
+                ],
+                layout: "BaseLayout",
+                defaultModelsExpandDepth: 1,
+                deepLinking: true,
+                displayOperationId: true,
+                docExpansion: "list"
+            });
+        };
+    </script>
+</body>
+</html>
