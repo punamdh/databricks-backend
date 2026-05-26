@@ -1,7 +1,5 @@
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Query
 
-from app.database.connection import get_session
 from app.schemas.audit import AuditRunCreate, AuditRunUpdate
 from app.schemas.common import PaginationMeta, success_response
 from app.services.audit_service import AuditService
@@ -10,8 +8,8 @@ router = APIRouter(prefix="/audit", tags=["audit"])
 
 
 @router.post("/runs")
-def create_audit_run(payload: AuditRunCreate, db: Session = Depends(get_session)):
-    return success_response(AuditService(db).create(payload.model_dump()))
+def create_audit_run(payload: AuditRunCreate):
+    return success_response(AuditService.create(payload.model_dump()))
 
 
 @router.get("/runs")
@@ -21,9 +19,8 @@ def list_audit_runs(
     run_id: str | None = None,
     table_config_id: int | None = None,
     status: str | None = None,
-    db: Session = Depends(get_session),
 ):
-    rows, total = AuditService(db).list(page, page_size, run_id, table_config_id, status)
+    rows, total = AuditService.list(page, page_size, run_id, table_config_id, status)
     return success_response(
         rows,
         PaginationMeta(page=page, page_size=page_size, total=total, total_pages=(total + page_size - 1) // page_size),
@@ -31,10 +28,10 @@ def list_audit_runs(
 
 
 @router.get("/runs/{table_run_id}")
-def get_audit_run(table_run_id: int, db: Session = Depends(get_session)):
-    return success_response(AuditService(db).get(table_run_id))
+def get_audit_run(table_run_id: int):
+    return success_response(AuditService.get(table_run_id))
 
 
 @router.patch("/runs/{table_run_id}")
-def update_audit_run(table_run_id: int, payload: AuditRunUpdate, db: Session = Depends(get_session)):
-    return success_response(AuditService(db).update(table_run_id, payload.model_dump()))
+def update_audit_run(table_run_id: int, payload: AuditRunUpdate):
+    return success_response(AuditService.update(table_run_id, payload.model_dump()))

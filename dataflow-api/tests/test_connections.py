@@ -1,13 +1,13 @@
 def _payload(name="conn_a"):
     return {
         "connection_name": name,
-        "connection_type": "sqlite",
+        "connection_type": "postgres",
         "connection_domain_name": "finance",
         "is_target": 0,
         "env_type": "dev",
-        "auth_type": "none",
-        "details": {"db_file_path": "test.db"},
-        "auth": {},
+        "auth_type": "iam",
+        "details": {"host": "localhost", "port": "5432", "database": "dwh", "schema": "public"},
+        "auth": {"iam_credentials": "token"},
         "created_by": "tester",
         "updated_by": "tester",
     }
