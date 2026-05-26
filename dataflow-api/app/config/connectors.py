@@ -41,12 +41,6 @@ CONNECTOR_REGISTRY = {
         "defaults": {"port": "5439"},
         "auth_methods": ["basic", "iam"],
     },
-    "sqlite": {
-        "label": "SQLite",
-        "base_fields": ["db_file_path"],
-        "defaults": {},
-        "auth_methods": ["none"],
-    },
     "s3": {
         "label": "S3",
         "base_fields": ["bucket_name", "region", "path_prefix"],

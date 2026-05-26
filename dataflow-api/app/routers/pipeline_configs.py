@@ -1,7 +1,5 @@
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Query
 
-from app.database.connection import get_session
 from app.schemas.common import PaginationMeta, success_response
 from app.schemas.pipeline_config import (
     PipelineConfigCreate,
@@ -16,8 +14,8 @@ router = APIRouter(prefix="/pipeline-configs", tags=["pipeline-configs"])
 
 
 @router.post("")
-def create_pipeline_config(payload: PipelineConfigCreate, db: Session = Depends(get_session)):
-    return success_response(PipelineConfigService(db).create(payload.model_dump()))
+def create_pipeline_config(payload: PipelineConfigCreate):
+    return success_response(PipelineConfigService.create(payload.model_dump()))
 
 
 @router.get("")
@@ -29,9 +27,8 @@ def list_pipeline_configs(
     config_group: str | None = None,
     load_type: str | None = None,
     is_active: int = 1,
-    db: Session = Depends(get_session),
 ):
-    rows, total = PipelineConfigService(db).list(
+    rows, total = PipelineConfigService.list(
         page,
         page_size,
         {
@@ -49,51 +46,51 @@ def list_pipeline_configs(
 
 
 @router.get("/{table_config_id}")
-def get_pipeline_config(table_config_id: int, db: Session = Depends(get_session)):
-    return success_response(PipelineConfigService(db).get(table_config_id))
+def get_pipeline_config(table_config_id: int):
+    return success_response(PipelineConfigService.get(table_config_id))
 
 
 @router.put("/{table_config_id}")
-def update_pipeline_config(table_config_id: int, payload: PipelineConfigUpdate, db: Session = Depends(get_session)):
-    return success_response(PipelineConfigService(db).update(table_config_id, payload.model_dump()))
+def update_pipeline_config(table_config_id: int, payload: PipelineConfigUpdate):
+    return success_response(PipelineConfigService.update(table_config_id, payload.model_dump()))
 
 
 @router.delete("/{table_config_id}")
-def delete_pipeline_config(table_config_id: int, updated_by: str = Query(default="system"), db: Session = Depends(get_session)):
-    PipelineConfigService(db).soft_delete(table_config_id, updated_by)
+def delete_pipeline_config(table_config_id: int, updated_by: str = Query(default="system")):
+    PipelineConfigService.soft_delete(table_config_id, updated_by)
     return success_response({"deleted": True})
 
 
 @router.post("/bulk")
-def bulk_create_pipeline_configs(payload: list[PipelineConfigCreate], db: Session = Depends(get_session)):
-    return success_response(PipelineConfigService(db).bulk_create([item.model_dump() for item in payload]))
+def bulk_create_pipeline_configs(payload: list[PipelineConfigCreate]):
+    return success_response(PipelineConfigService.bulk_create([item.model_dump() for item in payload]))
 
 
 @router.get("/{table_config_id}/watermark")
-def get_watermark(table_config_id: int, db: Session = Depends(get_session)):
-    return success_response(PipelineConfigService(db).get_watermark(table_config_id))
+def get_watermark(table_config_id: int):
+    return success_response(PipelineConfigService.get_watermark(table_config_id))
 
 
 @router.put("/{table_config_id}/watermark")
-def upsert_watermark(table_config_id: int, payload: WatermarkPayload, db: Session = Depends(get_session)):
-    return success_response(PipelineConfigService(db).upsert_watermark(table_config_id, payload.model_dump()))
+def upsert_watermark(table_config_id: int, payload: WatermarkPayload):
+    return success_response(PipelineConfigService.upsert_watermark(table_config_id, payload.model_dump()))
 
 
 @router.get("/{table_config_id}/pii")
-def list_pii(table_config_id: int, db: Session = Depends(get_session)):
-    return success_response(PipelineConfigService(db).get_pii(table_config_id))
+def list_pii(table_config_id: int):
+    return success_response(PipelineConfigService.get_pii(table_config_id))
 
 
 @router.post("/{table_config_id}/pii")
-def set_pii(table_config_id: int, payload: list[PiiPayload], env_type: str = Query(default="dev"), created_by: str = Query(default="system"), db: Session = Depends(get_session)):
-    return success_response(PipelineConfigService(db).set_pii(table_config_id, env_type, created_by, [item.model_dump() for item in payload]))
+def set_pii(table_config_id: int, payload: list[PiiPayload], env_type: str = Query(default="dev"), created_by: str = Query(default="system")):
+    return success_response(PipelineConfigService.set_pii(table_config_id, env_type, created_by, [item.model_dump() for item in payload]))
 
 
 @router.get("/{table_config_id}/schema-versions")
-def list_schema_versions(table_config_id: int, db: Session = Depends(get_session)):
-    return success_response(PipelineConfigService(db).list_schema_versions(table_config_id))
+def list_schema_versions(table_config_id: int):
+    return success_response(PipelineConfigService.list_schema_versions(table_config_id))
 
 
 @router.post("/{table_config_id}/schema-versions")
-def add_schema_version(table_config_id: int, payload: SchemaVersionPayload, db: Session = Depends(get_session)):
-    return success_response(PipelineConfigService(db).add_schema_version(table_config_id, payload.model_dump()))
+def add_schema_version(table_config_id: int, payload: SchemaVersionPayload):
+    return success_response(PipelineConfigService.add_schema_version(table_config_id, payload.model_dump()))
