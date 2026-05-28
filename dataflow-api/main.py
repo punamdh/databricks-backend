@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import audit, bts_configs, connectors, connections, pipeline_configs
+from app.routers import audit, bts_configs, connectors, connections, pipeline_configs, stb_configs
 from app.schemas.common import success_response
 from database.init_db import init_db
 
@@ -26,6 +26,7 @@ app.include_router(connectors.router, prefix="/api/v1")
 app.include_router(connections.router, prefix="/api/v1")
 app.include_router(pipeline_configs.router, prefix="/api/v1")
 app.include_router(bts_configs.router, prefix="/api/v1")
+app.include_router(stb_configs.router, prefix="/api/v1")
 app.include_router(audit.router, prefix="/api/v1")
 
 
