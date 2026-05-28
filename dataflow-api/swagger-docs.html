@@ -6,47 +6,17 @@
     <title>DataFlow API - Swagger Documentation</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css">
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: sans-serif;
-        }
-        .topbar {
-            background-color: #1e1e1e;
-            padding: 10px;
-            color: white;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-        .topbar h1 {
-            margin: 0;
-            font-size: 24px;
-        }
-        .topbar-section {
-            display: flex;
-            gap: 20px;
-        }
-        .info-badge {
-            background-color: #ffc107;
-            color: #333;
-            padding: 4px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        .api-version {
-            background-color: #28a745;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-        }
+        body { margin: 0; padding: 0; font-family: sans-serif; }
+        .topbar { background-color: #1e1e1e; padding: 10px; color: white; display: flex; align-items: center; gap: 20px; }
+        .topbar h1 { margin: 0; font-size: 24px; }
+        .topbar-section { display: flex; gap: 20px; }
+        .info-badge { background-color: #ffc107; color: #333; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .api-version { background-color: #28a745; color: white; padding: 4px 12px; border-radius: 4px; font-size: 12px; }
     </style>
 </head>
 <body>
     <div class="topbar">
-        <h1>🚀 DataFlow API</h1>
+        <h1>DataFlow API</h1>
         <div class="topbar-section">
             <span class="info-badge">Production Ready</span>
             <span class="api-version">v1.0.0</span>
@@ -63,334 +33,348 @@
                 "title": "DataFlow API",
                 "description": "REST API for DataFlow Pipeline Configuration Platform - Metadata Store V2. Manages data source connections, pipeline configurations, transformations, schema versioning, PII classification, and audit logging.",
                 "version": "1.0.0",
-                "contact": {
-                    "name": "DataFlow Team",
-                    "email": "support@dataflow.dev"
-                },
-                "license": {
-                    "name": "MIT"
-                }
+                "contact": { "name": "DataFlow Team", "email": "support@dataflow.dev" },
+                "license": { "name": "MIT" }
             },
             "servers": [
-                {
-                    "url": "http://localhost:8000",
-                    "description": "Local Development Server"
-                },
-                {
-                    "url": "https://api.dataflow.dev",
-                    "description": "Production Server"
-                }
+                { "url": "http://localhost:8000", "description": "Local Development Server" },
+                { "url": "https://api.dataflow.dev", "description": "Production Server" }
             ],
             "tags": [
-                {
-                    "name": "Connectors",
-                    "description": "Connector metadata and field schemas"
-                },
-                {
-                    "name": "Connections",
-                    "description": "Data source connection management (CRUD)"
-                },
-                {
-                    "name": "Pipeline Configs",
-                    "description": "Source-to-Bronze pipeline configuration (CRUD, watermark, PII, schema)"
-                },
-                {
-                    "name": "BTS Configs",
-                    "description": "Bronze-to-Silver transformation configuration (CRUD)"
-                },
-                {
-                    "name": "Audit",
-                    "description": "Pipeline execution audit logs and run tracking"
-                }
+                { "name": "Health", "description": "API health check" },
+                { "name": "Connectors", "description": "Connector metadata and field schemas" },
+                { "name": "Connections", "description": "Data source connection management (CRUD) + table/column discovery" },
+                { "name": "STB Configs", "description": "Source-to-Bronze table group creation — creates a table_group_s2b record and multiple pipeline configs in one request" },
+                { "name": "Pipeline Configs", "description": "Individual pipeline config CRUD, watermark, PII, and schema-version sub-resources" },
+                { "name": "BTS Configs", "description": "Bronze-to-Silver transformation configuration (CRUD)" },
+                { "name": "Audit", "description": "Pipeline execution audit logs and run tracking" }
             ],
             "paths": {
                 "/health": {
                     "get": {
                         "summary": "Health Check",
-                        "description": "Verify API is running and database is connected",
                         "tags": ["Health"],
                         "responses": {
                             "200": {
                                 "description": "API is healthy",
-                                "content": {
-                                    "application/json": {
-                                        "schema": {
-                                            "type": "object",
-                                            "properties": {
-                                                "status": {"type": "string", "example": "success"},
-                                                "data": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "healthy": {"type": "boolean", "example": true}
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                                "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessEnvelope" } } }
                             }
                         }
                     }
                 },
+
                 "/api/v1/connectors": {
                     "get": {
-                        "summary": "List all supported connectors",
-                        "description": "Returns list of 12 supported connector types with their auth methods",
+                        "summary": "List supported connectors",
+                        "description": "Returns all 12 supported connector types with auth methods and icon.",
                         "tags": ["Connectors"],
-                        "responses": {
-                            "200": {
-                                "description": "List of connectors",
-                                "content": {
-                                    "application/json": {
-                                        "schema": {
-                                            "type": "object",
-                                            "properties": {
-                                                "status": {"type": "string", "example": "success"},
-                                                "data": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "connector_key": {"type": "string", "example": "mssql"},
-                                                            "connector_label": {"type": "string", "example": "MSSQL"},
-                                                            "auth_types": {"type": "array", "items": {"type": "string"}},
-                                                            "icon": {"type": "string"}
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        "responses": { "200": { "description": "List of connectors" } }
                     }
                 },
                 "/api/v1/connectors/{connector_key}/fields": {
                     "get": {
                         "summary": "Get connector field schema",
-                        "description": "Returns base fields and auth fields for a connector + auth combo",
+                        "description": "Returns base connection fields and auth-specific fields for a connector + auth combo.",
                         "tags": ["Connectors"],
                         "parameters": [
-                            {
-                                "name": "connector_key",
-                                "in": "path",
-                                "required": true,
-                                "schema": {"type": "string"},
-                                "description": "Connector type (mssql, postgres, mysql, oracle, snowflake, bigquery, redshift, sqlite, s3, gcs, azure-blob, sftp, local)"
-                            },
-                            {
-                                "name": "auth_type",
-                                "in": "query",
-                                "required": false,
-                                "schema": {"type": "string"},
-                                "description": "Auth method (basic, kerberos, oauth, iam, key, none)"
-                            }
+                            { "name": "connector_key", "in": "path", "required": true, "schema": { "type": "string", "example": "mssql" }, "description": "Connector type key (mssql, postgres, mysql, oracle, snowflake, bigquery, redshift, s3, gcs, azure-blob, sftp, local)" },
+                            { "name": "auth_type", "in": "query", "required": false, "schema": { "type": "string", "example": "basic" }, "description": "Auth method (basic, kerberos, oauth, iam, key, none)" }
                         ],
-                        "responses": {
-                            "200": {
-                                "description": "Connector fields schema"
-                            }
-                        }
+                        "responses": { "200": { "description": "Connector fields schema" }, "404": { "description": "Connector not found" } }
                     }
                 },
+
                 "/api/v1/connections": {
                     "post": {
                         "summary": "Create connection",
-                        "description": "Create a new data source connection with atomic transaction",
+                        "description": "Create a new data source or target connection.",
                         "tags": ["Connections"],
                         "requestBody": {
                             "required": true,
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "type": "object",
-                                        "required": ["connection_name", "connection_type", "connection_domain_name", "env_type"],
-                                        "properties": {
-                                            "connection_name": {"type": "string", "example": "Production MSSQL"},
-                                            "connection_type": {"type": "string", "example": "mssql"},
-                                            "connection_domain_name": {"type": "string", "example": "HR"},
-                                            "is_target": {"type": "integer", "example": 0},
-                                            "env_type": {"type": "string", "enum": ["dev", "qa", "prod"], "example": "prod"},
-                                            "auth_type": {"type": "string", "example": "basic"},
-                                            "details": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "host": {"type": "string"},
-                                                    "port": {"type": "string"},
-                                                    "database": {"type": "string"}
-                                                }
-                                            },
-                                            "auth": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "username": {"type": "string"},
-                                                    "password": {"type": "string"}
-                                                }
-                                            }
-                                        }
+                                    "schema": { "$ref": "#/components/schemas/ConnectionCreate" },
+                                    "example": {
+                                        "connection_name": "Prod MSSQL",
+                                        "connection_type": "mssql",
+                                        "connection_domain_name": "HR",
+                                        "is_target": 0,
+                                        "env_type": "prod",
+                                        "auth_type": "basic",
+                                        "details": { "host": "db.example.com", "port": "1433", "database": "HRdb" },
+                                        "auth": { "username": "sa", "password": "secret" }
                                     }
                                 }
                             }
                         },
                         "responses": {
-                            "201": {
-                                "description": "Connection created successfully"
-                            },
-                            "400": {
-                                "description": "Invalid connector or auth type"
-                            },
-                            "409": {
-                                "description": "Connection name already exists for environment"
-                            }
+                            "201": { "description": "Connection created" },
+                            "400": { "description": "Invalid connector or auth type" },
+                            "409": { "description": "Connection name already exists for this environment" }
                         }
                     },
                     "get": {
                         "summary": "List connections",
-                        "description": "List all connections with pagination and filtering",
                         "tags": ["Connections"],
                         "parameters": [
-                            {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
-                            {"name": "page_size", "in": "query", "schema": {"type": "integer", "default": 20}},
-                            {"name": "env_type", "in": "query", "schema": {"type": "string"}},
-                            {"name": "connection_type", "in": "query", "schema": {"type": "string"}},
-                            {"name": "is_target", "in": "query", "schema": {"type": "integer"}},
-                            {"name": "is_active", "in": "query", "schema": {"type": "integer", "default": 1}},
-                            {"name": "search", "in": "query", "schema": {"type": "string"}}
+                            { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+                            { "name": "page_size", "in": "query", "schema": { "type": "integer", "default": 20 } },
+                            { "name": "env_type", "in": "query", "schema": { "type": "string" } },
+                            { "name": "connection_type", "in": "query", "schema": { "type": "string" } },
+                            { "name": "is_target", "in": "query", "schema": { "type": "integer" } },
+                            { "name": "is_active", "in": "query", "schema": { "type": "integer", "default": 1 } },
+                            { "name": "search", "in": "query", "schema": { "type": "string" } }
                         ],
-                        "responses": {
-                            "200": {
-                                "description": "Paginated list of connections"
-                            }
-                        }
+                        "responses": { "200": { "description": "Paginated list of connections" } }
                     }
                 },
                 "/api/v1/connections/{id}": {
                     "get": {
-                        "summary": "Get connection detail",
-                        "description": "Retrieve full connection details with nested properties",
+                        "summary": "Get connection",
                         "tags": ["Connections"],
-                        "parameters": [
-                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
-                        ],
-                        "responses": {
-                            "200": {
-                                "description": "Connection details"
-                            },
-                            "404": {
-                                "description": "Connection not found"
-                            }
-                        }
+                        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } } ],
+                        "responses": { "200": { "description": "Connection details" }, "404": { "description": "Not found" } }
                     },
                     "put": {
                         "summary": "Update connection",
-                        "description": "Update connection properties (replace details and auth)",
                         "tags": ["Connections"],
-                        "parameters": [
-                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
-                        ],
-                        "requestBody": {
-                            "required": true,
-                            "content": {
-                                "application/json": {
-                                    "schema": {
-                                        "type": "object"
-                                    }
-                                }
-                            }
-                        },
-                        "responses": {
-                            "200": {
-                                "description": "Connection updated"
-                            },
-                            "404": {
-                                "description": "Connection not found"
-                            }
-                        }
+                        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } } ],
+                        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object" } } } },
+                        "responses": { "200": { "description": "Connection updated" }, "404": { "description": "Not found" } }
                     },
                     "delete": {
                         "summary": "Soft-delete connection",
-                        "description": "Deactivate connection (sets is_active=0)",
                         "tags": ["Connections"],
                         "parameters": [
-                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}},
-                            {"name": "updated_by", "in": "query", "schema": {"type": "string", "default": "system"}}
+                            { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } },
+                            { "name": "updated_by", "in": "query", "schema": { "type": "string", "default": "system" } }
                         ],
-                        "responses": {
-                            "200": {
-                                "description": "Connection deactivated"
-                            },
-                            "404": {
-                                "description": "Connection not found"
-                            }
-                        }
+                        "responses": { "200": { "description": "Connection deactivated" }, "404": { "description": "Not found" } }
                     }
                 },
                 "/api/v1/connections/{id}/test": {
                     "post": {
                         "summary": "Test connection",
-                        "description": "Test connectivity to the data source",
+                        "description": "Verify connectivity to the data source.",
+                        "tags": ["Connections"],
+                        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } } ],
+                        "responses": { "200": { "description": "Test result" } }
+                    }
+                },
+                "/api/v1/connections/{id}/tables": {
+                    "get": {
+                        "summary": "List tables",
+                        "description": "Discover tables available on the source connection. Uses connector-specific SQL for database connectors (INFORMATION_SCHEMA / ALL_TABLES / sys.tables etc.) and returns path metadata for file/storage connectors.",
                         "tags": ["Connections"],
                         "parameters": [
-                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
+                            { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "Connection ID" },
+                            { "name": "schema", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Filter by schema / owner name" }
                         ],
                         "responses": {
                             "200": {
-                                "description": "Connectivity test result"
-                            }
+                                "description": "List of tables",
+                                "content": {
+                                    "application/json": {
+                                        "schema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "status": { "type": "string", "example": "success" },
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": { "$ref": "#/components/schemas/TableInfo" }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "404": { "description": "Connection not found" },
+                            "422": { "description": "Connector type does not support table listing" }
                         }
                     }
                 },
+                "/api/v1/connections/{id}/tables/{schema_name}/{table_name}/columns": {
+                    "get": {
+                        "summary": "List columns",
+                        "description": "Discover columns for a specific table on the source connection via Spark JDBC.",
+                        "tags": ["Connections"],
+                        "parameters": [
+                            { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" }, "description": "Connection ID" },
+                            { "name": "schema_name", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Schema / owner name" },
+                            { "name": "table_name", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Table name" }
+                        ],
+                        "responses": {
+                            "200": {
+                                "description": "List of columns",
+                                "content": {
+                                    "application/json": {
+                                        "schema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "status": { "type": "string", "example": "success" },
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": { "$ref": "#/components/schemas/ColumnInfo" }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "404": { "description": "Connection not found" }
+                        }
+                    }
+                },
+
                 "/api/v1/stb/configs": {
                     "post": {
-                        "summary": "Create pipeline config",
-                        "description": "Create source-to-bronze pipeline configuration",
+                        "summary": "Create STB table group with pipeline configs",
+                        "description": "Creates one `table_group_s2b` record and one `tbl_source_table` record per entry in `config_groups`. Each config group can optionally include a watermark and PII column definitions. Returns the generated `table_group_id` and the list of created `table_config_id` values.",
+                        "tags": ["STB Configs"],
+                        "requestBody": {
+                            "required": true,
+                            "content": {
+                                "application/json": {
+                                    "schema": { "$ref": "#/components/schemas/STBConfigCreate" },
+                                    "example": {
+                                        "description": "orders_raw_ingestion",
+                                        "connection_source_id": 1,
+                                        "created_by": "admin",
+                                        "updated_by": "admin",
+                                        "config_groups": [
+                                            {
+                                                "connection_domain_name": "orders_pipeline",
+                                                "source_attributes": { "schema": "dbo", "table": "orders" },
+                                                "target_attributes": { "catalog": "main", "schema": "bronze", "table": "orders_raw" },
+                                                "load_type": "incremental",
+                                                "watermark_enabled": true,
+                                                "pii_scan_enabled": false,
+                                                "ingestion_frequency": "daily",
+                                                "env_type": "prod",
+                                                "is_active": true,
+                                                "tags": ["orders", "bronze"],
+                                                "watermark": {
+                                                    "watermark_column": "updated_at",
+                                                    "watermark_type": "timestamp",
+                                                    "env_type": "prod"
+                                                },
+                                                "pii_columns": []
+                                            },
+                                            {
+                                                "connection_domain_name": "customers_pipeline",
+                                                "source_attributes": { "schema": "dbo", "table": "customers" },
+                                                "target_attributes": { "catalog": "main", "schema": "bronze", "table": "customers_raw" },
+                                                "load_type": "full",
+                                                "watermark_enabled": false,
+                                                "pii_scan_enabled": true,
+                                                "ingestion_frequency": "weekly",
+                                                "env_type": "prod",
+                                                "is_active": true,
+                                                "tags": ["customers", "pii"],
+                                                "watermark": null,
+                                                "pii_columns": [
+                                                    {
+                                                        "column_name": "email",
+                                                        "pii_category": "email",
+                                                        "protection_method": "MASK",
+                                                        "sensitivity": "PII",
+                                                        "masking_policy": "email_mask",
+                                                        "access_tier": "RESTRICTED"
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "responses": {
+                            "200": {
+                                "description": "Table group and configs created",
+                                "content": {
+                                    "application/json": {
+                                        "schema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "status": { "type": "string", "example": "success" },
+                                                "data": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "table_group_id": { "type": "integer", "example": 3 },
+                                                        "description": { "type": "string" },
+                                                        "connection_source_id": { "type": "integer" },
+                                                        "created_count": { "type": "integer" },
+                                                        "failed_count": { "type": "integer" },
+                                                        "config_groups": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "table_config_id": { "type": "integer" },
+                                                                    "connection_domain_name": { "type": "string" },
+                                                                    "load_type": { "type": "string" },
+                                                                    "env_type": { "type": "string" }
+                                                                }
+                                                            }
+                                                        },
+                                                        "errors": { "type": "array", "items": { "type": "object" } }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "422": { "description": "Validation error (invalid load_type, missing source attributes, etc.)" }
+                        }
+                    },
+                    "get": {
+                        "summary": "List pipeline configs",
+                        "description": "List individual pipeline config records with pagination and filtering.",
+                        "tags": ["Pipeline Configs"],
+                        "parameters": [
+                            { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+                            { "name": "page_size", "in": "query", "schema": { "type": "integer", "default": 20 } },
+                            { "name": "env_type", "in": "query", "schema": { "type": "string" } },
+                            { "name": "connection_source_id", "in": "query", "schema": { "type": "integer" } },
+                            { "name": "table_group_id", "in": "query", "schema": { "type": "integer" }, "description": "Filter by table group" },
+                            { "name": "load_type", "in": "query", "schema": { "type": "string" } },
+                            { "name": "is_active", "in": "query", "schema": { "type": "integer", "default": 1 } }
+                        ],
+                        "responses": { "200": { "description": "Paginated list of pipeline configs" } }
+                    }
+                },
+                "/api/v1/stb/configs/bulk": {
+                    "post": {
+                        "summary": "Bulk create pipeline configs",
+                        "description": "Create multiple individual pipeline configs (each without a shared table group). Failures per item are collected and returned without aborting the batch.",
                         "tags": ["Pipeline Configs"],
                         "requestBody": {
                             "required": true,
                             "content": {
                                 "application/json": {
                                     "schema": {
-                                        "type": "object",
-                                        "required": ["connection_source_id", "connection_domain_name", "config_group", "source_attributes", "target_attributes", "load_type", "env_type"],
-                                        "properties": {
-                                            "connection_source_id": {"type": "integer"},
-                                            "connection_domain_name": {"type": "string"},
-                                            "config_group": {"type": "string"},
-                                            "source_attributes": {"type": "object"},
-                                            "target_attributes": {"type": "object"},
-                                            "load_type": {"type": "string", "enum": ["full", "incremental", "cdc", "api", "file_autoloader"]},
-                                            "natural_key_columns": {"type": "string"},
-                                            "watermark_enabled": {"type": "integer"},
-                                            "pii_scan_enabled": {"type": "integer"},
-                                            "fail_mode": {"type": "string", "enum": ["halt", "skip", "quarantine"]},
-                                            "env_type": {"type": "string", "enum": ["dev", "qa", "prod"]}
-                                        }
+                                        "type": "array",
+                                        "items": { "$ref": "#/components/schemas/PipelineConfigCreate" }
                                     }
                                 }
                             }
                         },
                         "responses": {
-                            "201": {
-                                "description": "Pipeline config created"
-                            }
-                        }
-                    },
-                    "get": {
-                        "summary": "List pipeline configs",
-                        "description": "List all pipeline configurations with pagination",
-                        "tags": ["Pipeline Configs"],
-                        "parameters": [
-                            {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
-                            {"name": "page_size", "in": "query", "schema": {"type": "integer", "default": 20}},
-                            {"name": "env_type", "in": "query", "schema": {"type": "string"}},
-                            {"name": "connection_source_id", "in": "query", "schema": {"type": "integer"}},
-                            {"name": "config_group", "in": "query", "schema": {"type": "string"}},
-                            {"name": "load_type", "in": "query", "schema": {"type": "string"}}
-                        ],
-                        "responses": {
                             "200": {
-                                "description": "List of pipeline configs"
+                                "description": "Batch result",
+                                "content": {
+                                    "application/json": {
+                                        "schema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "created_count": { "type": "integer" },
+                                                "failed_count": { "type": "integer" },
+                                                "errors": { "type": "array", "items": { "type": "object" } }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -398,458 +382,582 @@
                 "/api/v1/stb/configs/{id}": {
                     "get": {
                         "summary": "Get pipeline config",
-                        "description": "Retrieve full pipeline configuration details",
                         "tags": ["Pipeline Configs"],
-                        "parameters": [
-                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
-                        ],
+                        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } } ],
                         "responses": {
                             "200": {
-                                "description": "Pipeline config details"
-                            }
+                                "description": "Pipeline config details",
+                                "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PipelineConfigOut" } } }
+                            },
+                            "404": { "description": "Not found" }
                         }
                     },
                     "put": {
                         "summary": "Update pipeline config",
-                        "description": "Update pipeline configuration",
                         "tags": ["Pipeline Configs"],
-                        "parameters": [
-                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
-                        ],
-                        "requestBody": {
-                            "required": true,
-                            "content": {"application/json": {"schema": {"type": "object"}}}
-                        },
-                        "responses": {
-                            "200": {
-                                "description": "Pipeline config updated"
-                            }
-                        }
-                    },
-                    "delete": {
-                        "summary": "Delete pipeline config",
-                        "description": "Soft-delete pipeline configuration",
-                        "tags": ["Pipeline Configs"],
-                        "parameters": [
-                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
-                        ],
-                        "responses": {
-                            "200": {
-                                "description": "Pipeline config deleted"
-                            }
-                        }
-                    }
-                },
-                "/api/v1/stb/configs/bulk": {
-                    "post": {
-                        "summary": "Bulk create pipeline configs",
-                        "description": "Create multiple pipeline configurations in batch",
-                        "tags": ["Pipeline Configs"],
+                        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } } ],
                         "requestBody": {
                             "required": true,
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "type": "array",
-                                        "items": {"type": "object"}
-                                    }
+                                    "schema": { "$ref": "#/components/schemas/PipelineConfigUpdate" }
                                 }
                             }
                         },
-                        "responses": {
-                            "200": {
-                                "description": "Batch creation result"
-                            }
-                        }
+                        "responses": { "200": { "description": "Updated" }, "404": { "description": "Not found" } }
+                    },
+                    "delete": {
+                        "summary": "Soft-delete pipeline config",
+                        "description": "Sets is_active=false and cascades to watermark, PII, schema-versions, and audit records.",
+                        "tags": ["Pipeline Configs"],
+                        "parameters": [
+                            { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } },
+                            { "name": "updated_by", "in": "query", "schema": { "type": "string", "default": "system" } }
+                        ],
+                        "responses": { "200": { "description": "Deleted" }, "404": { "description": "Not found" } }
                     }
                 },
                 "/api/v1/stb/configs/{id}/watermark": {
                     "get": {
                         "summary": "Get watermark",
-                        "description": "Retrieve watermark for incremental load tracking",
                         "tags": ["Pipeline Configs"],
-                        "parameters": [
-                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
-                        ],
+                        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } } ],
                         "responses": {
                             "200": {
-                                "description": "Watermark details"
-                            }
+                                "description": "Watermark details",
+                                "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Watermark" } } }
+                            },
+                            "404": { "description": "Not found" }
                         }
                     },
                     "put": {
                         "summary": "Upsert watermark",
-                        "description": "Create or update watermark for incremental load",
                         "tags": ["Pipeline Configs"],
-                        "parameters": [
-                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
-                        ],
+                        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } } ],
                         "requestBody": {
                             "required": true,
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "type": "object",
-                                        "properties": {
-                                            "watermark_column": {"type": "string"},
-                                            "watermark_type": {"type": "string", "enum": ["timestamp", "integer", "hashkey"]},
-                                            "last_value": {"type": "string"},
-                                            "last_run_id": {"type": "string"}
-                                        }
-                                    }
+                                    "schema": { "$ref": "#/components/schemas/WatermarkPayload" },
+                                    "example": { "watermark_column": "updated_at", "watermark_type": "timestamp", "env_type": "prod" }
                                 }
                             }
                         },
-                        "responses": {
-                            "200": {
-                                "description": "Watermark upserted"
-                            }
-                        }
+                        "responses": { "200": { "description": "Watermark upserted" }, "404": { "description": "Not found" } }
                     }
                 },
                 "/api/v1/stb/configs/{id}/pii": {
                     "get": {
-                        "summary": "Get PII attributes",
-                        "description": "Retrieve PII classification for columns",
+                        "summary": "List PII attributes",
                         "tags": ["Pipeline Configs"],
-                        "parameters": [
-                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
-                        ],
+                        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } } ],
                         "responses": {
                             "200": {
-                                "description": "PII attributes list"
+                                "description": "PII column list",
+                                "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/PiiAttribute" } } } }
                             }
                         }
                     },
                     "post": {
                         "summary": "Set PII attributes",
-                        "description": "Add or replace PII classifications for columns",
+                        "description": "Replace all PII column definitions for this pipeline config (deletes existing, inserts new).",
                         "tags": ["Pipeline Configs"],
                         "parameters": [
-                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}},
-                            {"name": "env_type", "in": "query", "schema": {"type": "string", "default": "dev"}},
-                            {"name": "created_by", "in": "query", "schema": {"type": "string", "default": "system"}}
+                            { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } },
+                            { "name": "env_type", "in": "query", "schema": { "type": "string", "default": "dev" } },
+                            { "name": "created_by", "in": "query", "schema": { "type": "string", "default": "system" } }
                         ],
                         "requestBody": {
                             "required": true,
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "object",
-                                            "properties": {
-                                                "column_name": {"type": "string"},
-                                                "pii_category": {"type": "string", "enum": ["email", "phone", "full_name", "national_id", "financial", "health"]},
-                                                "protection_method": {"type": "string", "enum": ["ENCRYPT", "MASK", "PSEUDONYMIZE", "REDACT"]},
-                                                "sensitivity": {"type": "string", "enum": ["PII", "PCI", "PHI", "CONFIDENTIAL", "PUBLIC"]},
-                                                "masking_policy": {"type": "string"},
-                                                "access_tier": {"type": "string"}
-                                            }
+                                    "schema": { "type": "array", "items": { "$ref": "#/components/schemas/PiiPayload" } },
+                                    "example": [
+                                        {
+                                            "column_name": "email",
+                                            "pii_category": "email",
+                                            "protection_method": "MASK",
+                                            "sensitivity": "PII",
+                                            "masking_policy": "email_mask",
+                                            "mask_pattern": "***@***.***",
+                                            "access_tier": "RESTRICTED",
+                                            "uc_tag_applied": true,
+                                            "uc_tag_key": "pii_level",
+                                            "uc_tag_value": "high"
                                         }
-                                    }
+                                    ]
                                 }
                             }
                         },
-                        "responses": {
-                            "200": {
-                                "description": "PII attributes set"
-                            }
-                        }
+                        "responses": { "200": { "description": "PII attributes replaced" }, "404": { "description": "Not found" } }
                     }
                 },
                 "/api/v1/stb/configs/{id}/schema-versions": {
                     "get": {
                         "summary": "List schema versions",
-                        "description": "Retrieve append-only log of schema changes",
+                        "description": "Append-only log of schema change events for this pipeline config.",
                         "tags": ["Pipeline Configs"],
-                        "parameters": [
-                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
-                        ],
-                        "responses": {
-                            "200": {
-                                "description": "Schema version history"
-                            }
-                        }
+                        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } } ],
+                        "responses": { "200": { "description": "Schema version history" } }
                     },
                     "post": {
                         "summary": "Add schema version",
-                        "description": "Record a new schema version change",
                         "tags": ["Pipeline Configs"],
-                        "parameters": [
-                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
-                        ],
+                        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } } ],
                         "requestBody": {
                             "required": true,
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "type": "object",
-                                        "properties": {
-                                            "version_number": {"type": "integer"},
-                                            "column_count": {"type": "integer"},
-                                            "column_changes_json": {"type": "object"},
-                                            "change_type": {"type": "string", "enum": ["additive", "deletion"]},
-                                            "detected_by_run_id": {"type": "string"}
-                                        }
+                                    "schema": { "$ref": "#/components/schemas/SchemaVersionPayload" },
+                                    "example": {
+                                        "column_count": 12,
+                                        "column_changes_json": { "added": ["new_col"], "removed": [] },
+                                        "change_type": "additive",
+                                        "detected_by_run_id": "run_20240501_001",
+                                        "env_type": "prod"
                                     }
                                 }
                             }
                         },
-                        "responses": {
-                            "200": {
-                                "description": "Schema version added"
-                            }
-                        }
+                        "responses": { "200": { "description": "Version added" }, "404": { "description": "Not found" } }
                     }
                 },
+
                 "/api/v1/bts-configs": {
                     "post": {
                         "summary": "Create BTS config",
-                        "description": "Create bronze-to-silver transformation configuration",
+                        "description": "Create a Bronze-to-Silver transformation configuration.",
                         "tags": ["BTS Configs"],
                         "requestBody": {
                             "required": true,
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "type": "object",
-                                        "required": ["dataset_name", "env_type"],
-                                        "properties": {
-                                            "dataset_name": {"type": "string"},
-                                            "source_config_id": {"type": "integer"},
-                                            "silver_layout": {"type": "array"},
-                                            "dq_rules": {"type": "array"},
-                                            "std_rules": {"type": "array"},
-                                            "transformation_yaml": {"type": "string"},
-                                            "tags": {"type": "array"},
-                                            "env_type": {"type": "string"}
-                                        }
+                                    "schema": { "$ref": "#/components/schemas/BTSConfigCreate" },
+                                    "example": {
+                                        "dataset_name": "orders_silver",
+                                        "source_config_id": 5,
+                                        "silver_layout": [{ "column": "order_id", "type": "BIGINT" }],
+                                        "dq_rules": [{ "rule": "not_null", "column": "order_id" }],
+                                        "std_rules": [],
+                                        "transformation_yaml": "select * from bronze.orders",
+                                        "tags": ["orders"],
+                                        "env_type": "prod"
                                     }
                                 }
                             }
                         },
-                        "responses": {
-                            "201": {
-                                "description": "BTS config created"
-                            }
-                        }
+                        "responses": { "201": { "description": "BTS config created" } }
                     },
                     "get": {
                         "summary": "List BTS configs",
-                        "description": "List all bronze-to-silver configurations",
                         "tags": ["BTS Configs"],
                         "parameters": [
-                            {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
-                            {"name": "page_size", "in": "query", "schema": {"type": "integer", "default": 20}},
-                            {"name": "env_type", "in": "query", "schema": {"type": "string"}}
+                            { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+                            { "name": "page_size", "in": "query", "schema": { "type": "integer", "default": 20 } },
+                            { "name": "env_type", "in": "query", "schema": { "type": "string" } },
+                            { "name": "dataset_name", "in": "query", "schema": { "type": "string" } }
                         ],
-                        "responses": {
-                            "200": {
-                                "description": "List of BTS configs"
-                            }
-                        }
+                        "responses": { "200": { "description": "Paginated list of BTS configs" } }
                     }
                 },
                 "/api/v1/bts-configs/{id}": {
                     "get": {
                         "summary": "Get BTS config",
-                        "description": "Retrieve BTS configuration details",
                         "tags": ["BTS Configs"],
-                        "parameters": [
-                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
-                        ],
-                        "responses": {
-                            "200": {
-                                "description": "BTS config details"
-                            }
-                        }
+                        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } } ],
+                        "responses": { "200": { "description": "BTS config details" }, "404": { "description": "Not found" } }
                     },
                     "put": {
                         "summary": "Update BTS config",
-                        "description": "Update BTS configuration",
                         "tags": ["BTS Configs"],
-                        "parameters": [
-                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
-                        ],
-                        "requestBody": {
-                            "required": true,
-                            "content": {"application/json": {"schema": {"type": "object"}}}
-                        },
-                        "responses": {
-                            "200": {
-                                "description": "BTS config updated"
-                            }
-                        }
+                        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } } ],
+                        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object" } } } },
+                        "responses": { "200": { "description": "Updated" }, "404": { "description": "Not found" } }
                     },
                     "delete": {
-                        "summary": "Delete BTS config",
-                        "description": "Soft-delete BTS configuration",
+                        "summary": "Soft-delete BTS config",
                         "tags": ["BTS Configs"],
                         "parameters": [
-                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
+                            { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } },
+                            { "name": "updated_by", "in": "query", "schema": { "type": "string", "default": "system" } }
                         ],
-                        "responses": {
-                            "200": {
-                                "description": "BTS config deleted"
-                            }
-                        }
+                        "responses": { "200": { "description": "Deleted" }, "404": { "description": "Not found" } }
                     }
                 },
+
                 "/api/v1/audit/runs": {
                     "post": {
                         "summary": "Create audit run",
-                        "description": "Create a new pipeline execution audit record",
+                        "description": "Create a new pipeline execution audit record when a run starts.",
                         "tags": ["Audit"],
                         "requestBody": {
                             "required": true,
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "type": "object",
-                                        "required": ["run_id", "table_config_id", "connection_source_id", "start_time", "status", "env_type"],
-                                        "properties": {
-                                            "run_id": {"type": "string"},
-                                            "table_config_id": {"type": "integer"},
-                                            "connection_source_id": {"type": "integer"},
-                                            "source_attributes": {"type": "object"},
-                                            "target_attributes": {"type": "object"},
-                                            "batch_id": {"type": "string"},
-                                            "load_type": {"type": "string"},
-                                            "start_time": {"type": "string", "format": "date-time"},
-                                            "status": {"type": "string", "enum": ["running", "succeeded", "failed"]},
-                                            "env_type": {"type": "string"}
-                                        }
+                                    "schema": { "$ref": "#/components/schemas/AuditRunCreate" },
+                                    "example": {
+                                        "run_id": "run_20240501_001",
+                                        "table_config_id": 5,
+                                        "connection_source_id": 1,
+                                        "connection_target_id": 2,
+                                        "load_type": "incremental",
+                                        "source_file": "s3://bucket/orders_20240501.parquet",
+                                        "pipeline_version": "1.2.0",
+                                        "start_time": "2024-05-01T08:00:00Z",
+                                        "status": "running",
+                                        "env_type": "prod"
                                     }
                                 }
                             }
                         },
-                        "responses": {
-                            "201": {
-                                "description": "Audit run created"
-                            }
-                        }
+                        "responses": { "201": { "description": "Audit run created" } }
                     },
                     "get": {
                         "summary": "List audit runs",
-                        "description": "List pipeline execution audit records with pagination",
                         "tags": ["Audit"],
                         "parameters": [
-                            {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
-                            {"name": "page_size", "in": "query", "schema": {"type": "integer", "default": 20}},
-                            {"name": "run_id", "in": "query", "schema": {"type": "string"}},
-                            {"name": "table_config_id", "in": "query", "schema": {"type": "integer"}},
-                            {"name": "status", "in": "query", "schema": {"type": "string"}}
+                            { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+                            { "name": "page_size", "in": "query", "schema": { "type": "integer", "default": 20 } },
+                            { "name": "run_id", "in": "query", "schema": { "type": "string" } },
+                            { "name": "table_config_id", "in": "query", "schema": { "type": "integer" } },
+                            { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["running", "succeeded", "failed"] } }
                         ],
-                        "responses": {
-                            "200": {
-                                "description": "List of audit runs"
-                            }
-                        }
+                        "responses": { "200": { "description": "Paginated list of audit runs" } }
                     }
                 },
                 "/api/v1/audit/runs/{id}": {
                     "get": {
                         "summary": "Get audit run",
-                        "description": "Retrieve details of a specific pipeline execution",
                         "tags": ["Audit"],
-                        "parameters": [
-                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
-                        ],
+                        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } } ],
                         "responses": {
                             "200": {
-                                "description": "Audit run details"
-                            }
+                                "description": "Audit run details",
+                                "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AuditRunOut" } } }
+                            },
+                            "404": { "description": "Not found" }
                         }
                     },
                     "patch": {
                         "summary": "Update audit run",
-                        "description": "Update audit run on completion (end_time, status, metrics)",
+                        "description": "Update run metrics on completion (end_time, row counts, status, error details).",
                         "tags": ["Audit"],
-                        "parameters": [
-                            {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
-                        ],
+                        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } } ],
                         "requestBody": {
                             "required": true,
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "type": "object",
-                                        "properties": {
-                                            "end_time": {"type": "string", "format": "date-time"},
-                                            "elapsed_seconds": {"type": "integer"},
-                                            "rows_read": {"type": "integer"},
-                                            "rows_written": {"type": "integer"},
-                                            "watermark_end": {"type": "string"},
-                                            "status": {"type": "string"},
-                                            "error_message": {"type": "string"},
-                                            "error_type": {"type": "string"}
-                                        }
+                                    "schema": { "$ref": "#/components/schemas/AuditRunUpdate" },
+                                    "example": {
+                                        "end_time": "2024-05-01T08:04:22Z",
+                                        "elapsed_seconds": 262,
+                                        "rows_read": 50000,
+                                        "rows_written": 49998,
+                                        "watermark_end": "2024-05-01T08:00:00Z",
+                                        "status": "succeeded"
                                     }
                                 }
                             }
                         },
-                        "responses": {
-                            "200": {
-                                "description": "Audit run updated"
-                            }
-                        }
+                        "responses": { "200": { "description": "Run updated" }, "404": { "description": "Not found" } }
                     }
                 }
             },
+
             "components": {
                 "schemas": {
-                    "Connection": {
+                    "SuccessEnvelope": {
                         "type": "object",
                         "properties": {
-                            "connection_id": {"type": "integer"},
-                            "connection_name": {"type": "string"},
-                            "connection_type": {"type": "string"},
-                            "connection_domain_name": {"type": "string"},
-                            "is_target": {"type": "integer"},
-                            "env_type": {"type": "string"},
-                            "is_active": {"type": "integer"},
-                            "created_by": {"type": "string"},
-                            "created_at": {"type": "string", "format": "date-time"},
-                            "updated_by": {"type": "string"},
-                            "updated_at": {"type": "string", "format": "date-time"}
-                        }
-                    },
-                    "PipelineConfig": {
-                        "type": "object",
-                        "properties": {
-                            "table_config_id": {"type": "integer"},
-                            "connection_source_id": {"type": "integer"},
-                            "config_group": {"type": "string"},
-                            "source_attributes": {"type": "object"},
-                            "target_attributes": {"type": "object"},
-                            "load_type": {"type": "string"},
-                            "watermark_enabled": {"type": "integer"},
-                            "pii_scan_enabled": {"type": "integer"},
-                            "env_type": {"type": "string"}
-                        }
-                    },
-                    "AuditRun": {
-                        "type": "object",
-                        "properties": {
-                            "table_run_id": {"type": "integer"},
-                            "run_id": {"type": "string"},
-                            "table_config_id": {"type": "integer"},
-                            "start_time": {"type": "string", "format": "date-time"},
-                            "end_time": {"type": "string", "format": "date-time"},
-                            "status": {"type": "string"},
-                            "rows_read": {"type": "integer"},
-                            "rows_written": {"type": "integer"}
+                            "status": { "type": "string", "example": "success" },
+                            "data": { "type": "object" }
                         }
                     },
                     "Error": {
                         "type": "object",
                         "properties": {
-                            "status": {"type": "string", "example": "error"},
-                            "error_code": {"type": "string"},
-                            "message": {"type": "string"},
-                            "details": {"type": "object"}
+                            "status": { "type": "string", "example": "error" },
+                            "error_code": { "type": "string" },
+                            "message": { "type": "string" },
+                            "details": { "type": "object" }
                         }
+                    },
+
+                    "ConnectionCreate": {
+                        "type": "object",
+                        "required": ["connection_name", "connection_type", "connection_domain_name", "env_type"],
+                        "properties": {
+                            "connection_name": { "type": "string" },
+                            "connection_type": { "type": "string", "enum": ["mssql","postgres","mysql","oracle","snowflake","bigquery","redshift","s3","gcs","azure-blob","sftp","local"] },
+                            "connection_domain_name": { "type": "string" },
+                            "is_target": { "type": "integer", "default": 0 },
+                            "env_type": { "type": "string", "enum": ["dev","staging","prod"] },
+                            "auth_type": { "type": "string" },
+                            "details": { "type": "object" },
+                            "auth": { "type": "object" }
+                        }
+                    },
+
+                    "TableInfo": {
+                        "type": "object",
+                        "properties": {
+                            "schema_name": { "type": "string", "example": "dbo" },
+                            "table_name": { "type": "string", "example": "orders" }
+                        }
+                    },
+                    "ColumnInfo": {
+                        "type": "object",
+                        "properties": {
+                            "column_name": { "type": "string", "example": "order_id" },
+                            "data_type": { "type": "string", "example": "int" },
+                            "is_nullable": { "type": "string", "example": "NO" },
+                            "ordinal_position": { "type": "integer", "example": 1 }
+                        }
+                    },
+
+                    "WatermarkPayload": {
+                        "type": "object",
+                        "required": ["watermark_column", "watermark_type"],
+                        "properties": {
+                            "watermark_column": { "type": "string", "example": "updated_at" },
+                            "watermark_type": { "type": "string", "enum": ["timestamp", "integer", "hashkey"], "example": "timestamp" },
+                            "last_value": { "type": "string", "nullable": true },
+                            "last_run_id": { "type": "string", "nullable": true },
+                            "env_type": { "type": "string", "default": "dev" },
+                            "updated_by": { "type": "string", "default": "system" }
+                        }
+                    },
+                    "Watermark": {
+                        "type": "object",
+                        "properties": {
+                            "watermark_id": { "type": "integer" },
+                            "table_config_id": { "type": "integer" },
+                            "watermark_column": { "type": "string" },
+                            "watermark_type": { "type": "string" },
+                            "last_value": { "type": "string" },
+                            "last_run_id": { "type": "string" },
+                            "env_type": { "type": "string" }
+                        }
+                    },
+
+                    "PiiPayload": {
+                        "type": "object",
+                        "required": ["column_name", "pii_category", "protection_method", "sensitivity"],
+                        "properties": {
+                            "column_name": { "type": "string" },
+                            "pii_category": { "type": "string", "enum": ["email","phone","full_name","national_id","financial","health"] },
+                            "protection_method": { "type": "string", "enum": ["ENCRYPT","MASK","PSEUDONYMIZE","REDACT"] },
+                            "sensitivity": { "type": "string", "enum": ["PII","PCI","PHI","CONFIDENTIAL","PUBLIC"] },
+                            "masking_policy": { "type": "string", "nullable": true },
+                            "mask_pattern": { "type": "string", "nullable": true, "example": "***@***.***" },
+                            "key_scope": { "type": "string", "nullable": true },
+                            "key_name": { "type": "string", "nullable": true },
+                            "hash_algorithm": { "type": "string", "nullable": true, "enum": ["SHA256","SHA512","MD5"] },
+                            "uc_tag_applied": { "type": "boolean", "default": false },
+                            "uc_tag_key": { "type": "string", "nullable": true },
+                            "uc_tag_value": { "type": "string", "nullable": true },
+                            "access_tier": { "type": "string", "default": "INTERNAL", "enum": ["PUBLIC","INTERNAL","CONFIDENTIAL","RESTRICTED"] },
+                            "allowed_groups": { "type": "string", "nullable": true }
+                        }
+                    },
+                    "PiiAttribute": {
+                        "allOf": [
+                            { "$ref": "#/components/schemas/PiiPayload" },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "pii_id": { "type": "integer" },
+                                    "table_config_id": { "type": "integer" }
+                                }
+                            }
+                        ]
+                    },
+
+                    "SchemaVersionPayload": {
+                        "type": "object",
+                        "required": ["column_count", "column_changes_json", "change_type"],
+                        "properties": {
+                            "version_number": { "type": "integer", "nullable": true, "description": "Auto-incremented if omitted" },
+                            "column_count": { "type": "integer" },
+                            "column_changes_json": { "type": "object" },
+                            "change_type": { "type": "string", "enum": ["additive", "deletion"] },
+                            "detected_by_run_id": { "type": "string", "nullable": true },
+                            "env_type": { "type": "string", "default": "dev" },
+                            "created_by": { "type": "string", "default": "system" }
+                        }
+                    },
+
+                    "PipelineConfigBase": {
+                        "type": "object",
+                        "properties": {
+                            "connection_source_id": { "type": "integer" },
+                            "connection_domain_name": { "type": "string" },
+                            "table_group_id": { "type": "integer", "nullable": true },
+                            "source_attributes": { "type": "object", "description": "For DB sources: {schema, table} or {query}. For file sources: {file_path, file_type}." },
+                            "target_attributes": { "type": "object", "description": "Destination catalog/schema/table." },
+                            "load_type": { "type": "string", "enum": ["full","incremental","cdc","api","file_autoloader"] },
+                            "natural_key_columns": { "type": "string", "nullable": true },
+                            "hash_key_column": { "type": "string", "nullable": true },
+                            "partition_columns": { "type": "string", "nullable": true },
+                            "watermark_enabled": { "type": "boolean", "default": false },
+                            "pii_scan_enabled": { "type": "boolean", "default": false },
+                            "ingestion_frequency": { "type": "string", "default": "adhoc" },
+                            "tags": { "type": "array", "items": { "type": "string" } },
+                            "env_type": { "type": "string", "enum": ["dev","staging","prod"], "default": "dev" }
+                        }
+                    },
+                    "PipelineConfigCreate": {
+                        "allOf": [
+                            { "$ref": "#/components/schemas/PipelineConfigBase" },
+                            {
+                                "type": "object",
+                                "required": ["connection_source_id", "connection_domain_name", "source_attributes", "target_attributes", "load_type", "env_type"],
+                                "properties": {
+                                    "created_by": { "type": "string", "default": "system" },
+                                    "updated_by": { "type": "string", "default": "system" },
+                                    "watermark": { "$ref": "#/components/schemas/WatermarkPayload", "nullable": true }
+                                }
+                            }
+                        ]
+                    },
+                    "PipelineConfigUpdate": {
+                        "type": "object",
+                        "properties": {
+                            "connection_source_id": { "type": "integer", "nullable": true },
+                            "connection_domain_name": { "type": "string", "nullable": true },
+                            "table_group_id": { "type": "integer", "nullable": true },
+                            "source_attributes": { "type": "object", "nullable": true },
+                            "target_attributes": { "type": "object", "nullable": true },
+                            "load_type": { "type": "string", "nullable": true },
+                            "watermark_enabled": { "type": "boolean", "nullable": true },
+                            "pii_scan_enabled": { "type": "boolean", "nullable": true },
+                            "ingestion_frequency": { "type": "string", "nullable": true },
+                            "tags": { "type": "array", "items": { "type": "string" }, "nullable": true },
+                            "env_type": { "type": "string", "nullable": true },
+                            "updated_by": { "type": "string", "default": "system" }
+                        }
+                    },
+                    "PipelineConfigOut": {
+                        "allOf": [
+                            { "$ref": "#/components/schemas/PipelineConfigBase" },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "table_config_id": { "type": "integer" },
+                                    "is_active": { "type": "boolean" }
+                                }
+                            }
+                        ]
+                    },
+
+                    "STBConfigGroupCreate": {
+                        "type": "object",
+                        "required": ["connection_domain_name", "source_attributes", "target_attributes", "load_type"],
+                        "properties": {
+                            "connection_domain_name": { "type": "string", "example": "orders_pipeline" },
+                            "source_attributes": { "type": "object", "description": "For DB: {schema, table} or {query}. For file: {file_path, file_type}." },
+                            "target_attributes": { "type": "object" },
+                            "load_type": { "type": "string", "enum": ["full","incremental","cdc","api","file_autoloader"] },
+                            "natural_key_columns": { "type": "string", "nullable": true },
+                            "hash_key_column": { "type": "string", "nullable": true },
+                            "partition_columns": { "type": "string", "nullable": true },
+                            "watermark_enabled": { "type": "boolean", "default": false },
+                            "pii_scan_enabled": { "type": "boolean", "default": false },
+                            "ingestion_frequency": { "type": "string", "default": "adhoc" },
+                            "env_type": { "type": "string", "default": "dev" },
+                            "is_active": { "type": "boolean", "default": true },
+                            "tags": { "type": "array", "items": { "type": "string" } },
+                            "watermark": { "$ref": "#/components/schemas/WatermarkPayload", "nullable": true },
+                            "pii_columns": { "type": "array", "items": { "$ref": "#/components/schemas/PiiPayload" } }
+                        }
+                    },
+                    "STBConfigCreate": {
+                        "type": "object",
+                        "required": ["connection_source_id", "config_groups"],
+                        "properties": {
+                            "description": { "type": "string", "nullable": true, "example": "orders_raw_ingestion" },
+                            "connection_source_id": { "type": "integer" },
+                            "created_by": { "type": "string", "default": "system" },
+                            "updated_by": { "type": "string", "default": "system" },
+                            "config_groups": {
+                                "type": "array",
+                                "minItems": 1,
+                                "items": { "$ref": "#/components/schemas/STBConfigGroupCreate" }
+                            }
+                        }
+                    },
+
+                    "BTSConfigCreate": {
+                        "type": "object",
+                        "required": ["dataset_name", "env_type"],
+                        "properties": {
+                            "dataset_name": { "type": "string" },
+                            "source_config_id": { "type": "integer", "nullable": true },
+                            "silver_layout": { "type": "array", "items": { "type": "object" } },
+                            "dq_rules": { "type": "array", "items": { "type": "object" } },
+                            "std_rules": { "type": "array", "items": { "type": "object" } },
+                            "transformation_yaml": { "type": "string", "nullable": true },
+                            "tags": { "type": "array", "items": { "type": "string" } },
+                            "env_type": { "type": "string" },
+                            "created_by": { "type": "string", "default": "system" },
+                            "updated_by": { "type": "string", "default": "system" }
+                        }
+                    },
+
+                    "AuditRunCreate": {
+                        "type": "object",
+                        "required": ["run_id", "table_config_id", "connection_source_id", "start_time", "env_type"],
+                        "properties": {
+                            "run_id": { "type": "string" },
+                            "table_config_id": { "type": "integer" },
+                            "connection_source_id": { "type": "integer" },
+                            "connection_target_id": { "type": "integer", "nullable": true },
+                            "source_attributes": { "type": "object", "nullable": true },
+                            "target_attributes": { "type": "object", "nullable": true },
+                            "batch_id": { "type": "string", "nullable": true },
+                            "source_file": { "type": "string", "nullable": true, "description": "Path to the source file (for file-based ingestions)" },
+                            "pipeline_version": { "type": "string", "nullable": true, "description": "Version tag of the pipeline code" },
+                            "load_type": { "type": "string", "nullable": true },
+                            "start_time": { "type": "string", "format": "date-time" },
+                            "status": { "type": "string", "default": "running", "enum": ["running","succeeded","failed"] },
+                            "env_type": { "type": "string" },
+                            "created_by": { "type": "string", "default": "system" }
+                        }
+                    },
+                    "AuditRunUpdate": {
+                        "type": "object",
+                        "properties": {
+                            "end_time": { "type": "string", "format": "date-time", "nullable": true },
+                            "elapsed_seconds": { "type": "integer", "nullable": true },
+                            "rows_read": { "type": "integer", "nullable": true },
+                            "rows_written": { "type": "integer", "nullable": true },
+                            "watermark_start": { "type": "string", "nullable": true },
+                            "watermark_end": { "type": "string", "nullable": true },
+                            "status": { "type": "string", "nullable": true },
+                            "error_message": { "type": "string", "nullable": true },
+                            "error_type": { "type": "string", "nullable": true },
+                            "updated_by": { "type": "string", "default": "system" }
+                        }
+                    },
+                    "AuditRunOut": {
+                        "allOf": [
+                            { "$ref": "#/components/schemas/AuditRunCreate" },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "table_run_id": { "type": "integer" },
+                                    "end_time": { "type": "string", "format": "date-time", "nullable": true },
+                                    "elapsed_seconds": { "type": "integer", "nullable": true },
+                                    "rows_read": { "type": "integer", "nullable": true },
+                                    "rows_written": { "type": "integer", "nullable": true },
+                                    "watermark_start": { "type": "string", "nullable": true },
+                                    "watermark_end": { "type": "string", "nullable": true },
+                                    "error_message": { "type": "string", "nullable": true },
+                                    "error_type": { "type": "string", "nullable": true },
+                                    "is_active": { "type": "boolean" }
+                                }
+                            }
+                        ]
                     }
                 }
             }
@@ -864,9 +972,9 @@
                     SwaggerUIBundle.SwaggerUIStandalonePreset
                 ],
                 layout: "BaseLayout",
-                defaultModelsExpandDepth: 1,
+                defaultModelsExpandDepth: 2,
                 deepLinking: true,
-                displayOperationId: true,
+                displayOperationId: false,
                 docExpansion: "list"
             });
         };

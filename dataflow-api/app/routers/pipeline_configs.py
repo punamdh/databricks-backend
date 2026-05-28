@@ -8,14 +8,10 @@ from app.schemas.pipeline_config import (
     SchemaVersionPayload,
     WatermarkPayload,
 )
+# PipelineConfigCreate kept for /bulk endpoint
 from app.services.pipeline_config_service import PipelineConfigService
 
 router = APIRouter(prefix="/stb/configs", tags=["stb/configs"])
-
-
-@router.post("")
-def create_pipeline_config(payload: PipelineConfigCreate):
-    return success_response(PipelineConfigService.create(payload.model_dump()))
 
 
 @router.get("")
