@@ -10,6 +10,8 @@ class AuditRunCreate(BaseModel):
     source_attributes: dict | None = None
     target_attributes: dict | None = None
     batch_id: str | None = None
+    source_file: str | None = None
+    pipeline_version: str | None = None
     load_type: str | None = None
     start_time: str
     status: str = "running"

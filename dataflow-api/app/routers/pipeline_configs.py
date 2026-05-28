@@ -24,7 +24,7 @@ def list_pipeline_configs(
     page_size: int = Query(default=20, ge=1, le=200),
     env_type: str | None = None,
     connection_source_id: int | None = None,
-    config_group: str | None = None,
+    table_group_id: int | None = None,
     load_type: str | None = None,
     is_active: int = 1,
 ):
@@ -34,7 +34,7 @@ def list_pipeline_configs(
         {
             "env_type": env_type,
             "connection_source_id": connection_source_id,
-            "config_group": config_group,
+            "table_group_id": table_group_id,
             "load_type": load_type,
             "is_active": is_active,
         },

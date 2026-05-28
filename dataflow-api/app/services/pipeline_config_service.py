@@ -17,8 +17,12 @@ class PipelineConfigService:
         if "file_path" in source_attributes:
             if not source_attributes.get("file_type"):
                 raise_api_error(422, "MISSING_REQUIRED_FIELD", "file_type required for file sources")
-        elif not (source_attributes.get("schema") and source_attributes.get("table")):
-            raise_api_error(422, "INVALID_SOURCE_ATTRIBUTES", "schema and table required for database sources")
+        elif not (
+            source_attributes.get("query")
+            or (source_attributes.get("schema") and source_attributes.get("table"))
+            or source_attributes.get("table")
+        ):
+            raise_api_error(422, "INVALID_SOURCE_ATTRIBUTES", "source_attributes must include 'table' or 'query' for database sources")
 
     @staticmethod
     def _as_dict(row: dict) -> dict:
@@ -26,17 +30,15 @@ class PipelineConfigService:
             "table_config_id": row["table_config_id"],
             "connection_source_id": row["connection_source_id"],
             "connection_domain_name": row["connection_domain_name"],
-            "config_group": row.get("config_group", ""),
+            "table_group_id": row.get("table_group_id"),
             "source_attributes": json.loads(row["source_attributes"]),
             "target_attributes": json.loads(row["target_attributes"]),
             "load_type": row["load_type"],
             "natural_key_columns": row.get("natural_key_columns"),
             "hash_key_column": row.get("hash_key_column"),
             "partition_columns": row.get("partition_columns"),
-            "watermark_enabled": row.get("watermark_enabled", False),
-            "pii_scan_enabled": row.get("pii_scan_enabled", False),
-            "fail_mode": row.get("fail_mode", "halt"),
-            "retry_count": row.get("retry_count", 0),
+            "watermark_enabled": bool(row.get("watermark_enabled", False)),
+            "pii_scan_enabled": bool(row.get("pii_scan_enabled", False)),
             "ingestion_frequency": row.get("ingestion_frequency", "adhoc"),
             "tags": json.loads(row["tags"]) if row.get("tags") else [],
             "env_type": row["env_type"],
@@ -55,7 +57,7 @@ class PipelineConfigService:
         source["source_attributes"] = json.dumps(source["source_attributes"])
         source["target_attributes"] = json.dumps(source["target_attributes"])
         source["tags"] = json.dumps(source.get("tags", []))
-        source["is_active"] = 1
+        source["is_active"] = True
         source["created_by"] = actor
         source["updated_by"] = payload.get("updated_by", actor)
         source["created_at"] = source["updated_at"] = source.get("created_at") or source.get("updated_at") or datetime.now(timezone.utc).isoformat()
@@ -168,9 +170,16 @@ class PipelineConfigService:
                 "pii_category": row["pii_category"],
                 "protection_method": row["protection_method"],
                 "sensitivity": row["sensitivity"],
-                "masking_policy": row["masking_policy"],
-                "uc_tag_applied": row["uc_tag_applied"],
-                "access_tier": row["access_tier"],
+                "masking_policy": row.get("masking_policy"),
+                "mask_pattern": row.get("mask_pattern"),
+                "key_scope": row.get("key_scope"),
+                "key_name": row.get("key_name"),
+                "hash_algorithm": row.get("hash_algorithm"),
+                "uc_tag_applied": bool(row.get("uc_tag_applied", False)),
+                "uc_tag_key": row.get("uc_tag_key"),
+                "uc_tag_value": row.get("uc_tag_value"),
+                "access_tier": row.get("access_tier", "INTERNAL"),
+                "allowed_groups": row.get("allowed_groups"),
             }
             for row in rows
         ]

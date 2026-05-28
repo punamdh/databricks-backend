@@ -3,6 +3,7 @@ from fastapi import APIRouter, Query
 from app.schemas.common import PaginationMeta, success_response
 from app.schemas.connection import ConnectionCreate, ConnectionUpdate
 from app.services.connection_service import ConnectionService
+from app.services.metadata_service import MetadataService
 
 router = APIRouter(prefix="/connections", tags=["connections"])
 
@@ -53,3 +54,18 @@ def delete_connection(connection_id: int, updated_by: str = Query(default="syste
 @router.post("/{connection_id}/test")
 def test_connection(connection_id: int):
     return success_response(ConnectionService.test_connection(connection_id))
+
+
+@router.get("/{connection_id}/tables")
+def list_tables(
+    connection_id: int,
+    schema: str | None = Query(default=None, description="Filter by schema/owner name"),
+):
+    """List tables available in the source connection. Results depend on the connector type."""
+    return success_response(MetadataService.list_tables(connection_id, schema))
+
+
+@router.get("/{connection_id}/tables/{schema_name}/{table_name}/columns")
+def list_columns(connection_id: int, schema_name: str, table_name: str):
+    """List columns for a specific table in the source connection."""
+    return success_response(MetadataService.list_columns(connection_id, schema_name, table_name))

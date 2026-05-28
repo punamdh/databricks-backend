@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field
 
+
 class WatermarkPayload(BaseModel):
     watermark_column: str
     watermark_type: str
@@ -15,8 +16,15 @@ class PiiPayload(BaseModel):
     protection_method: str
     sensitivity: str
     masking_policy: str | None = None
-    uc_tag_applied: int = 0
+    mask_pattern: str | None = None
+    key_scope: str | None = None
+    key_name: str | None = None
+    hash_algorithm: str | None = None
+    uc_tag_applied: bool = False
+    uc_tag_key: str | None = None
+    uc_tag_value: str | None = None
     access_tier: str = "INTERNAL"
+    allowed_groups: str | None = None
 
 
 class SchemaVersionPayload(BaseModel):
@@ -32,17 +40,15 @@ class SchemaVersionPayload(BaseModel):
 class PipelineConfigBase(BaseModel):
     connection_source_id: int
     connection_domain_name: str
-    config_group: str
+    table_group_id: int | None = None
     source_attributes: dict
     target_attributes: dict
     load_type: str
     natural_key_columns: str | None = None
     hash_key_column: str | None = None
     partition_columns: str | None = None
-    watermark_enabled: int = 0
-    pii_scan_enabled: int = 0
-    fail_mode: str = "halt"
-    retry_count: int = 0
+    watermark_enabled: bool = False
+    pii_scan_enabled: bool = False
     ingestion_frequency: str = "adhoc"
     tags: list[str] = Field(default_factory=list)
     env_type: str = "dev"
@@ -57,17 +63,15 @@ class PipelineConfigCreate(PipelineConfigBase):
 class PipelineConfigUpdate(BaseModel):
     connection_source_id: int | None = None
     connection_domain_name: str | None = None
-    config_group: str | None = None
+    table_group_id: int | None = None
     source_attributes: dict | None = None
     target_attributes: dict | None = None
     load_type: str | None = None
     natural_key_columns: str | None = None
     hash_key_column: str | None = None
     partition_columns: str | None = None
-    watermark_enabled: int | None = None
-    pii_scan_enabled: int | None = None
-    fail_mode: str | None = None
-    retry_count: int | None = None
+    watermark_enabled: bool | None = None
+    pii_scan_enabled: bool | None = None
     ingestion_frequency: str | None = None
     tags: list[str] | None = None
     env_type: str | None = None
@@ -76,6 +80,6 @@ class PipelineConfigUpdate(BaseModel):
 
 class PipelineConfigOut(PipelineConfigBase):
     table_config_id: int
-    is_active: int
+    is_active: bool
 
     model_config = ConfigDict(from_attributes=True)

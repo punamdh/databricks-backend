@@ -55,8 +55,8 @@ class PipelineConfigRepository:
             df = df.filter(F.col("env_type") == filters["env_type"])
         if filters.get("connection_source_id"):
             df = df.filter(F.col("connection_source_id") == filters["connection_source_id"])
-        if filters.get("config_group"):
-            df = df.filter(F.col("config_group") == filters["config_group"])
+        if filters.get("table_group_id"):
+            df = df.filter(F.col("table_group_id") == filters["table_group_id"])
         if filters.get("load_type"):
             df = df.filter(F.col("load_type") == filters["load_type"])
 
@@ -167,8 +167,15 @@ class PipelineConfigRepository:
                     "protection_method": item["protection_method"],
                     "sensitivity": item["sensitivity"],
                     "masking_policy": item.get("masking_policy"),
-                    "uc_tag_applied": item.get("uc_tag_applied", 0),
+                    "mask_pattern": item.get("mask_pattern"),
+                    "key_scope": item.get("key_scope"),
+                    "key_name": item.get("key_name"),
+                    "hash_algorithm": item.get("hash_algorithm"),
+                    "uc_tag_applied": bool(item.get("uc_tag_applied", False)),
+                    "uc_tag_key": item.get("uc_tag_key"),
+                    "uc_tag_value": item.get("uc_tag_value"),
                     "access_tier": item.get("access_tier", "INTERNAL"),
+                    "allowed_groups": item.get("allowed_groups"),
                     "env_type": env_type,
                     "is_active": True,
                     "created_by": actor,

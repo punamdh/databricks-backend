@@ -19,6 +19,8 @@ class AuditService:
             "source_attributes": json.loads(row["source_attributes"]) if row.get("source_attributes") else None,
             "target_attributes": json.loads(row["target_attributes"]) if row.get("target_attributes") else None,
             "batch_id": row.get("batch_id"),
+            "source_file": row.get("source_file"),
+            "pipeline_version": row.get("pipeline_version"),
             "load_type": row.get("load_type"),
             "start_time": row["start_time"],
             "end_time": row.get("end_time"),
