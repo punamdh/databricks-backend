@@ -56,6 +56,8 @@ class BTSConfigService:
 
     @staticmethod
     def update(bts_config_id: int, payload: dict):
+        print(f"[DEBUG] BTSConfigService.update called with bts_config_id={bts_config_id}, payload={payload}")
+        
         if not BTSConfigRepository.get(bts_config_id):
             raise_api_error(404, "PIPELINE_CONFIG_NOT_FOUND", "BTS config not found")
 
@@ -69,8 +71,10 @@ class BTSConfigService:
         updates["updated_by"] = payload.get("updated_by", "system")
         updates["updated_at"] = datetime.now(timezone.utc).isoformat()
 
+        print(f"[DEBUG] Updates dict to be applied: {updates}")
+        
         BTSConfigRepository.update(bts_config_id, updates)
-        return BTSConfigService.get(bts_config_id)
+        return {"updated": True, "bts_config_id": bts_config_id}
 
     @staticmethod
     def soft_delete(bts_config_id: int, actor: str):

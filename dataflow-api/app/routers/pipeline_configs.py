@@ -10,7 +10,7 @@ from app.schemas.pipeline_config import (
 )
 from app.services.pipeline_config_service import PipelineConfigService
 
-router = APIRouter(prefix="/pipeline-configs", tags=["pipeline-configs"])
+router = APIRouter(prefix="/stb/configs", tags=["stb/configs"])
 
 
 @router.post("")

@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from delta.tables import DeltaTable
 from pyspark.sql import functions as F
 
 from app.database.connection import get_spark
-from app.repositories.delta_utils import append_rows, next_id, now_utc_iso, paginate, table_name
+from app.repositories.delta_utils import append_rows, bool_value, next_id, now_utc_iso, paginate, row_to_dict, table_name, update_rows
 
 
 class BTSConfigRepository:
@@ -13,8 +12,15 @@ class BTSConfigRepository:
     @staticmethod
     def create(payload: dict) -> dict:
         spark = get_spark()
-        row = {"bts_config_id": next_id(BTSConfigRepository.table, "bts_config_id"), **payload}
+        row = {**payload}
         append_rows(BTSConfigRepository.table, [row])
+        
+        # Fetch the generated bts_config_id
+        result = spark.table(BTSConfigRepository.table).orderBy(F.col("bts_config_id").desc()).limit(1).collect()[0]
+        result_dict = result.asDict()
+        bts_config_id = result_dict["bts_config_id"]
+        row["bts_config_id"] = bts_config_id
+        
         return row
 
     @staticmethod
@@ -22,16 +28,16 @@ class BTSConfigRepository:
         spark = get_spark()
         rows = (
             spark.table(BTSConfigRepository.table)
-            .filter((F.col("bts_config_id") == bts_config_id) & (F.col("is_active") == 1))
+            .filter((F.col("bts_config_id") == bts_config_id) & (F.col("is_active") == bool_value(BTSConfigRepository.table, "is_active", True)))
             .limit(1)
             .collect()
         )
-        return rows[0].asDict() if rows else None
+        return row_to_dict(rows[0]) if rows else None
 
     @staticmethod
     def list(page: int, page_size: int, env_type: str | None, dataset_name: str | None):
         spark = get_spark()
-        df = spark.table(BTSConfigRepository.table).filter(F.col("is_active") == 1)
+        df = spark.table(BTSConfigRepository.table).filter(F.col("is_active") == bool_value(BTSConfigRepository.table, "is_active", True))
         if env_type:
             df = df.filter(F.col("env_type") == env_type)
         if dataset_name:
@@ -40,16 +46,18 @@ class BTSConfigRepository:
 
     @staticmethod
     def update(bts_config_id: int, payload: dict) -> None:
-        spark = get_spark()
-        DeltaTable.forName(spark, BTSConfigRepository.table).update(
-            condition=(F.col("bts_config_id") == bts_config_id) & (F.col("is_active") == 1),
-            set={k: F.lit(v) for k, v in payload.items()},
+        print(f"[DEBUG] BTSConfigRepository.update called with bts_config_id={bts_config_id}, payload={payload}")
+        update_rows(
+            BTSConfigRepository.table,
+            f"bts_config_id = {bts_config_id} AND is_active = TRUE",
+            payload
         )
+        print(f"[DEBUG] BTSConfigRepository.update completed")
 
     @staticmethod
     def soft_delete(bts_config_id: int, actor: str) -> None:
-        spark = get_spark()
-        DeltaTable.forName(spark, BTSConfigRepository.table).update(
-            condition=(F.col("bts_config_id") == bts_config_id) & (F.col("is_active") == 1),
-            set={"is_active": F.lit(0), "updated_by": F.lit(actor), "updated_at": F.lit(now_utc_iso())},
+        update_rows(
+            BTSConfigRepository.table,
+            f"bts_config_id = {bts_config_id} AND is_active = TRUE",
+            {"is_active": False, "updated_by": actor, "updated_at": now_utc_iso()}
         )

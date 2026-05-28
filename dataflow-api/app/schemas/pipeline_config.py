@@ -55,6 +55,9 @@ class PipelineConfigCreate(PipelineConfigBase):
 
 
 class PipelineConfigUpdate(BaseModel):
+    connection_source_id: int | None = None
+    connection_domain_name: str | None = None
+    config_group: str | None = None
     source_attributes: dict | None = None
     target_attributes: dict | None = None
     load_type: str | None = None
@@ -67,6 +70,7 @@ class PipelineConfigUpdate(BaseModel):
     retry_count: int | None = None
     ingestion_frequency: str | None = None
     tags: list[str] | None = None
+    env_type: str | None = None
     updated_by: str = "system"
 
 

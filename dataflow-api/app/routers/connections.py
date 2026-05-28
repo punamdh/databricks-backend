@@ -19,7 +19,7 @@ def list_connections(
     env_type: str | None = None,
     connection_type: str | None = None,
     is_target: int | None = None,
-    is_active: int = 1,
+    is_active: bool = True,
     search: str | None = None,
 ):
     rows, total = ConnectionService.list_connections(

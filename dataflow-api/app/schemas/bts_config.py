@@ -21,6 +21,7 @@ class BTSConfigUpdate(BaseModel):
     std_rules: list[dict] | None = None
     transformation_yaml: str | None = None
     tags: list[str] | None = None
+    env_type: str | None = None
     updated_by: str = "system"
 
 

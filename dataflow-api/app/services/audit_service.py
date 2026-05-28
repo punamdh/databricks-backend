@@ -15,6 +15,7 @@ class AuditService:
             "run_id": row["run_id"],
             "table_config_id": row["table_config_id"],
             "connection_source_id": row["connection_source_id"],
+            "connection_target_id": row.get("connection_target_id"),
             "source_attributes": json.loads(row["source_attributes"]) if row.get("source_attributes") else None,
             "target_attributes": json.loads(row["target_attributes"]) if row.get("target_attributes") else None,
             "batch_id": row.get("batch_id"),
@@ -40,7 +41,7 @@ class AuditService:
         row = AuditRepository.create(
             {
                 **payload,
-                "is_active": 1,
+                "is_active": True,
                 "created_by": actor,
                 "updated_by": payload.get("updated_by", actor),
                 "created_at": now,

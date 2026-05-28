@@ -26,18 +26,18 @@ class PipelineConfigService:
             "table_config_id": row["table_config_id"],
             "connection_source_id": row["connection_source_id"],
             "connection_domain_name": row["connection_domain_name"],
-            "config_group": row["config_group"],
+            "config_group": row.get("config_group", ""),
             "source_attributes": json.loads(row["source_attributes"]),
             "target_attributes": json.loads(row["target_attributes"]),
             "load_type": row["load_type"],
-            "natural_key_columns": row["natural_key_columns"],
-            "hash_key_column": row["hash_key_column"],
-            "partition_columns": row["partition_columns"],
-            "watermark_enabled": row["watermark_enabled"],
-            "pii_scan_enabled": row["pii_scan_enabled"],
-            "fail_mode": row["fail_mode"],
-            "retry_count": row["retry_count"],
-            "ingestion_frequency": row["ingestion_frequency"],
+            "natural_key_columns": row.get("natural_key_columns"),
+            "hash_key_column": row.get("hash_key_column"),
+            "partition_columns": row.get("partition_columns"),
+            "watermark_enabled": row.get("watermark_enabled", False),
+            "pii_scan_enabled": row.get("pii_scan_enabled", False),
+            "fail_mode": row.get("fail_mode", "halt"),
+            "retry_count": row.get("retry_count", 0),
+            "ingestion_frequency": row.get("ingestion_frequency", "adhoc"),
             "tags": json.loads(row["tags"]) if row.get("tags") else [],
             "env_type": row["env_type"],
             "is_active": row["is_active"],
@@ -101,7 +101,7 @@ class PipelineConfigService:
         updates["updated_at"] = datetime.now(timezone.utc).isoformat()
 
         PipelineConfigRepository.update(table_config_id, updates)
-        return PipelineConfigService.get(table_config_id)
+        return {"updated": True, "table_config_id": table_config_id}
 
     @staticmethod
     def soft_delete(table_config_id: int, actor: str) -> None:

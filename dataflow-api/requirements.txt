@@ -8,3 +8,9 @@ pytest==8.2.1
 pytest-cov==5.0.0
 pyspark==3.5.8
 delta-spark==3.2.0
+pandas>=1.0.5
+pyarrow>=4.0.0
+grpcio>=1.48.1
+setuptools
+protobuf
+grpcio-status

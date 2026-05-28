@@ -6,6 +6,7 @@ class AuditRunCreate(BaseModel):
     run_id: str
     table_config_id: int
     connection_source_id: int
+    connection_target_id: int | None = None
     source_attributes: dict | None = None
     target_attributes: dict | None = None
     batch_id: str | None = None
